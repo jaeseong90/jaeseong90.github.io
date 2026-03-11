@@ -4,27 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="개발자 재성의 기술 블로그 - Spring Boot, Flutter, AI, DevOps 등 실무 개발 경험을 공유합니다.">
-  <meta name="keywords" content="개발, 프로그래밍, Spring Boot, Flutter, AI, DevOps, 기술블로그">
+  <meta name="keywords" content="개발, 프로그래밍, Spring Boot, Flutter, AI, DevOps, 기술블로그, Docker, JPA, MyBatis">
   <meta name="author" content="재성">
   <meta name="google-adsense-account" content="ca-pub-6529673634044767">
-  
+  <link rel="canonical" href="https://jaeseong90.github.io/">
+
   <!-- Open Graph -->
   <meta property="og:title" content="재성의 개발 블로그">
   <meta property="og:description" content="실무에서 배운 개발 경험과 기술을 공유합니다.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://jaeseong90.github.io">
-  
+
   <title>재성의 개발 블로그 | Dev Blog</title>
-  
+
   <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
-  
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-  
+
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "재성의 개발 블로그",
+    "description": "Spring Boot, Flutter, AI, DevOps 등 실무 개발 경험을 공유하는 기술 블로그",
+    "url": "https://jaeseong90.github.io",
+    "author": {
+      "@type": "Person",
+      "name": "재성",
+      "url": "https://github.com/jaeseong90"
+    },
+    "inLanguage": "ko-KR"
+  }
+  </script>
 </head>
 <body>
   <!-- Header -->
@@ -58,9 +76,100 @@
     </div>
 
     <h2 class="section-title">최신 글</h2>
-    
+
     <div class="posts-grid">
-      <!-- Post 1 -->
+      <!-- Post 1 - Supabase -->
+      <article class="post-card">
+        <div class="post-card-content">
+          <span class="post-tag">Supabase</span>
+          <h3><a href="posts/supabase-backend-guide.html">Supabase로 서버리스 백엔드 구축하기: Firebase 대안 실전 가이드</a></h3>
+          <p>인증, 데이터베이스, 스토리지, 실시간 기능까지 Supabase를 활용한 서버리스 백엔드 구축 경험을 공유합니다.</p>
+          <div class="post-meta">
+            <span>2025.04.05</span>
+            <span>13분 읽기</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Post 2 - Logging -->
+      <article class="post-card">
+        <div class="post-card-content">
+          <span class="post-tag">Spring Boot</span>
+          <h3><a href="posts/spring-boot-logging-strategy.html">Spring Boot 운영 환경을 위한 로깅 전략</a></h3>
+          <p>구조화된 로그 설계, MDC를 활용한 요청 추적, 환경별 Logback 설정 등 운영에서 효과적인 로깅 전략을 다룹니다.</p>
+          <div class="post-meta">
+            <span>2025.04.01</span>
+            <span>11분 읽기</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Post 3 - Flutter State Management -->
+      <article class="post-card">
+        <div class="post-card-content">
+          <span class="post-tag">Flutter</span>
+          <h3><a href="posts/flutter-state-management-comparison.html">Flutter 상태관리 라이브러리 비교: 실무 관점에서 본 선택 기준</a></h3>
+          <p>Provider, Riverpod, BLoC, GetX의 장단점을 실제 프로젝트 경험을 바탕으로 비교 분석합니다.</p>
+          <div class="post-meta">
+            <span>2025.03.28</span>
+            <span>14분 읽기</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Post 4 - Exception Handling -->
+      <article class="post-card">
+        <div class="post-card-content">
+          <span class="post-tag">Spring Boot</span>
+          <h3><a href="posts/spring-boot-exception-handling.html">Spring Boot REST API 예외 처리 완벽 가이드</a></h3>
+          <p>ControllerAdvice를 활용한 전역 예외 처리와 일관된 에러 응답 설계 패턴을 정리했습니다.</p>
+          <div class="post-meta">
+            <span>2025.03.25</span>
+            <span>10분 읽기</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Post 5 - MyBatis to JPA -->
+      <article class="post-card">
+        <div class="post-card-content">
+          <span class="post-tag">Spring Boot</span>
+          <h3><a href="posts/mybatis-to-jpa-migration.html">MyBatis에서 JPA로 점진적 마이그레이션 전략</a></h3>
+          <p>기존 MyBatis를 유지하면서 JPA를 점진적으로 도입하는 하이브리드 전략과 주의사항을 공유합니다.</p>
+          <div class="post-meta">
+            <span>2025.03.22</span>
+            <span>13분 읽기</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Post 6 - GitHub Actions -->
+      <article class="post-card">
+        <div class="post-card-content">
+          <span class="post-tag">DevOps</span>
+          <h3><a href="posts/github-actions-ci-cd.html">GitHub Actions로 Spring Boot CI/CD 파이프라인 구축하기</a></h3>
+          <p>GitHub Actions를 활용하여 빌드, 테스트, 배포를 자동화하는 CI/CD 파이프라인 구축 가이드입니다.</p>
+          <div class="post-meta">
+            <span>2025.03.18</span>
+            <span>11분 읽기</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Post 7 - Docker -->
+      <article class="post-card">
+        <div class="post-card-content">
+          <span class="post-tag">Docker</span>
+          <h3><a href="posts/docker-spring-boot-deployment.html">Docker로 Spring Boot 배포 자동화하기</a></h3>
+          <p>멀티스테이지 빌드, Docker Compose 구성, Blue-Green 배포까지 Docker 기반 배포 전략을 다룹니다.</p>
+          <div class="post-meta">
+            <span>2025.03.15</span>
+            <span>12분 읽기</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Post 8 -->
       <article class="post-card">
         <div class="post-card-content">
           <span class="post-tag">Spring Boot</span>
@@ -73,7 +182,7 @@
         </div>
       </article>
 
-      <!-- Post 2 -->
+      <!-- Post 9 -->
       <article class="post-card">
         <div class="post-card-content">
           <span class="post-tag">AI</span>
@@ -86,7 +195,7 @@
         </div>
       </article>
 
-      <!-- Post 3 -->
+      <!-- Post 10 -->
       <article class="post-card">
         <div class="post-card-content">
           <span class="post-tag">Flutter</span>
@@ -99,7 +208,7 @@
         </div>
       </article>
 
-      <!-- Post 4 -->
+      <!-- Post 11 -->
       <article class="post-card">
         <div class="post-card-content">
           <span class="post-tag">DevOps</span>
@@ -112,7 +221,7 @@
         </div>
       </article>
 
-      <!-- Post 5 -->
+      <!-- Post 12 -->
       <article class="post-card">
         <div class="post-card-content">
           <span class="post-tag">ERP</span>
@@ -125,7 +234,7 @@
         </div>
       </article>
 
-      <!-- Post 6 -->
+      <!-- Post 13 -->
       <article class="post-card">
         <div class="post-card-content">
           <span class="post-tag">보안</span>
@@ -152,9 +261,10 @@
         <div class="footer-links">
           <a href="about.html">소개</a>
           <a href="privacy.html">개인정보처리방침</a>
+          <a href="terms.html">이용약관</a>
           <a href="contact.html">연락처</a>
         </div>
-        <p class="copyright">© 2025 재성의 개발 블로그. All rights reserved.</p>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
       </div>
     </div>
   </footer>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Flutter 상태관리 라이브러리 비교 분석. Provider, Riverpod, BLoC, GetX의 장단점과 실무에서의 선택 기준.">
+  <meta name="keywords" content="Flutter, 상태관리, Riverpod, Provider, BLoC, GetX, Dart">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="Flutter 상태관리 라이브러리 비교: 실무 관점에서 본 선택 기준">
+  <meta property="og:description" content="Provider, Riverpod, BLoC, GetX의 장단점과 프로젝트별 선택 기준">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/flutter-state-management-comparison.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/flutter-state-management-comparison.html">
+
+  <title>Flutter 상태관리 라이브러리 비교: 실무 관점에서 본 선택 기준 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">Flutter</span>
+      <h1>Flutter 상태관리 라이브러리 비교: 실무 관점에서 본 선택 기준</h1>
+      <div class="post-meta">
+        <span>2025.03.28</span>
+        <span>14분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </section>
+
+  <article class="post-content">
+    <p>Flutter 프로젝트를 시작할 때 가장 먼저 고민하게 되는 것이 상태관리 라이브러리 선택입니다. Provider, Riverpod, BLoC, GetX 등 다양한 선택지가 있고, 각각의 철학과 장단점이 다릅니다. 이 글에서는 여러 프로젝트에서 직접 사용한 경험을 바탕으로 비교 분석합니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>상태관리가 중요한 이유</h2>
+
+    <p>Flutter는 선언형 UI 프레임워크입니다. 상태가 변경되면 UI가 자동으로 다시 그려지는 구조입니다. 간단한 앱에서는 <code>setState()</code>만으로 충분하지만, 앱이 복잡해지면 다음과 같은 문제가 발생합니다:</p>
+
+    <ul>
+      <li><strong>Prop Drilling:</strong> 상위 위젯에서 하위 위젯으로 데이터를 계속 전달해야 함</li>
+      <li><strong>불필요한 리빌드:</strong> 관련 없는 위젯까지 다시 그려지는 성능 문제</li>
+      <li><strong>테스트 어려움:</strong> UI와 비즈니스 로직이 결합되어 테스트가 복잡</li>
+      <li><strong>코드 유지보수:</strong> 상태 변경 흐름을 추적하기 어려움</li>
+    </ul>
+
+    <h2>Provider: Flutter 팀이 추천하는 기본 선택</h2>
+
+    <p>Provider는 InheritedWidget을 감싼 래퍼로, Flutter 공식 문서에서도 추천하는 상태관리 솔루션입니다.</p>
+
+    <pre><code>// Provider 예시
+class CartNotifier extends ChangeNotifier {
+  final List&lt;CartItem&gt; _items = [];
+
+  List&lt;CartItem&gt; get items =&gt; List.unmodifiable(_items);
+  int get totalPrice =&gt; _items.fold(0, (sum, item) =&gt; sum + item.price);
+
+  void addItem(CartItem item) {
+    _items.add(item);
+    notifyListeners();
+  }
+
+  void removeItem(String id) {
+    _items.removeWhere((item) =&gt; item.id == id);
+    notifyListeners();
+  }
+}
+
+// 위젯에서 사용
+class CartPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cart = context.watch&lt;CartNotifier&gt;();
+    return ListView.builder(
+      itemCount: cart.items.length,
+      itemBuilder: (context, index) =&gt; CartItemTile(cart.items[index]),
+    );
+  }
+}</code></pre>
+
+    <p><strong>장점:</strong> 학습 곡선이 낮고, Flutter와 잘 통합되며, 간단한 프로젝트에 적합합니다.</p>
+    <p><strong>단점:</strong> 타입 안전성이 약하고(런타임 에러), Provider 간 의존성 관리가 불편합니다.</p>
+
+    <h2>Riverpod: Provider의 진화</h2>
+
+    <p>Riverpod은 Provider의 한계를 해결하기 위해 같은 개발자가 만든 라이브러리입니다. 컴파일 타임 안전성과 유연한 의존성 관리가 핵심입니다.</p>
+
+    <pre><code>// Riverpod 예시
+@riverpod
+class CartNotifier extends _$CartNotifier {
+  @override
+  List&lt;CartItem&gt; build() =&gt; [];
+
+  void addItem(CartItem item) {
+    state = [...state, item];
+  }
+
+  void removeItem(String id) {
+    state = state.where((item) =&gt; item.id != id).toList();
+  }
+}
+
+@riverpod
+int cartTotalPrice(ref) {
+  final items = ref.watch(cartNotifierProvider);
+  return items.fold(0, (sum, item) =&gt; sum + item.price);
+}
+
+// 위젯에서 사용
+class CartPage extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(cartNotifierProvider);
+    final totalPrice = ref.watch(cartTotalPriceProvider);
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) =&gt; CartItemTile(items[index]),
+          ),
+        ),
+        Text('총 금액: $totalPrice원'),
+      ],
+    );
+  }
+}</code></pre>
+
+    <p><strong>장점:</strong> 컴파일 타임 안전성, 코드 생성으로 보일러플레이트 감소, Provider 간 의존성을 명시적으로 관리할 수 있습니다.</p>
+    <p><strong>단점:</strong> 학습 곡선이 Provider보다 높고, 코드 생성(build_runner) 설정이 필요합니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>BLoC: 이벤트 기반의 구조적 접근</h2>
+
+    <p>BLoC(Business Logic Component)은 이벤트와 상태를 명확히 분리하는 패턴입니다. 대규모 팀에서 일관된 코드 구조를 유지하는 데 유리합니다.</p>
+
+    <pre><code>// BLoC 예시
+// Events
+abstract class CartEvent {}
+class AddToCart extends CartEvent {
+  final CartItem item;
+  AddToCart(this.item);
+}
+class RemoveFromCart extends CartEvent {
+  final String itemId;
+  RemoveFromCart(this.itemId);
+}
+
+// State
+class CartState {
+  final List&lt;CartItem&gt; items;
+  int get totalPrice =&gt; items.fold(0, (sum, item) =&gt; sum + item.price);
+
+  const CartState({this.items = const []});
+  CartState copyWith({List&lt;CartItem&gt;? items}) =&gt;
+      CartState(items: items ?? this.items);
+}
+
+// BLoC
+class CartBloc extends Bloc&lt;CartEvent, CartState&gt; {
+  CartBloc() : super(const CartState()) {
+    on&lt;AddToCart&gt;((event, emit) {
+      emit(state.copyWith(items: [...state.items, event.item]));
+    });
+    on&lt;RemoveFromCart&gt;((event, emit) {
+      emit(state.copyWith(
+        items: state.items.where((i) =&gt; i.id != event.itemId).toList(),
+      ));
+    });
+  }
+}
+
+// 위젯에서 사용
+class CartPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder&lt;CartBloc, CartState&gt;(
+      builder: (context, state) =&gt; ListView.builder(
+        itemCount: state.items.length,
+        itemBuilder: (context, index) =&gt; CartItemTile(state.items[index]),
+      ),
+    );
+  }
+}</code></pre>
+
+    <p><strong>장점:</strong> 이벤트 추적이 용이하고, 테스트가 쉬우며, 대규모 팀에서 일관된 구조를 유지할 수 있습니다.</p>
+    <p><strong>단점:</strong> 보일러플레이트 코드가 많고, 간단한 기능에도 Event/State/BLoC 3개 클래스가 필요합니다.</p>
+
+    <h2>GetX: 빠른 프로토타이핑</h2>
+
+    <p>GetX는 상태관리, 라우팅, 의존성 주입을 하나의 패키지로 제공합니다. 빠른 개발이 필요한 경우 유용합니다.</p>
+
+    <pre><code>// GetX 예시
+class CartController extends GetxController {
+  final items = &lt;CartItem&gt;[].obs;
+  int get totalPrice =&gt; items.fold(0, (sum, item) =&gt; sum + item.price);
+
+  void addItem(CartItem item) =&gt; items.add(item);
+  void removeItem(String id) =&gt; items.removeWhere((i) =&gt; i.id == id);
+}
+
+// 위젯에서 사용
+class CartPage extends StatelessWidget {
+  final controller = Get.find&lt;CartController&gt;();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() =&gt; ListView.builder(
+      itemCount: controller.items.length,
+      itemBuilder: (context, index) =&gt;
+          CartItemTile(controller.items[index]),
+    ));
+  }
+}</code></pre>
+
+    <p><strong>장점:</strong> 코드가 간결하고, 학습이 쉬우며, 올인원 패키지로 편리합니다.</p>
+    <p><strong>단점:</strong> Flutter의 위젯 트리와 분리되어 디버깅이 어렵고, 매직이 많아 동작 원리를 파악하기 어렵습니다.</p>
+
+    <h2>실무에서의 선택 기준</h2>
+
+    <p>여러 프로젝트를 경험하면서 정리한 선택 기준입니다:</p>
+
+    <ul>
+      <li><strong>소규모 프로젝트 / 프로토타입:</strong> Provider 또는 GetX가 적합합니다. 빠르게 개발하고 검증할 수 있습니다.</li>
+      <li><strong>중규모 프로젝트 (개인 또는 소규모 팀):</strong> Riverpod을 추천합니다. 타입 안전성과 유연성의 균형이 좋습니다.</li>
+      <li><strong>대규모 프로젝트 (다수 팀원):</strong> BLoC이 적합합니다. 구조가 강제되어 코드 일관성을 유지하기 쉽습니다.</li>
+    </ul>
+
+    <p>개인적으로는 Riverpod을 가장 선호합니다. BitRoom Factory 프로젝트에서도 Riverpod + Supabase 조합을 사용하고 있으며, 코드 생성을 통한 보일러플레이트 감소와 Provider 간 의존성 관리가 매우 편리합니다.</p>
+
+    <h2>마치며</h2>
+
+    <p>상태관리 라이브러리에 정답은 없습니다. 프로젝트의 규모, 팀의 숙련도, 개발 속도 요구사항에 따라 적절한 도구를 선택하는 것이 중요합니다. 어떤 라이브러리를 선택하든 비즈니스 로직과 UI를 분리하는 원칙만 지킨다면 유지보수 가능한 코드를 만들 수 있습니다.</p>
+
+    <div class="ad-container"></div>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

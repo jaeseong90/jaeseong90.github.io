@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Supabase를 활용한 서버리스 백엔드 구축 가이드. 인증, 데이터베이스, 스토리지, 실시간 기능까지 실무 경험을 공유합니다.">
+  <meta name="keywords" content="Supabase, Firebase 대안, 서버리스, PostgreSQL, BaaS, Flutter">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="Supabase로 서버리스 백엔드 구축하기: Firebase 대안 실전 가이드">
+  <meta property="og:description" content="Supabase를 활용한 인증, DB, 스토리지, 실시간 기능 구축 경험">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/supabase-backend-guide.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/supabase-backend-guide.html">
+
+  <title>Supabase로 서버리스 백엔드 구축하기: Firebase 대안 실전 가이드 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">Supabase</span>
+      <h1>Supabase로 서버리스 백엔드 구축하기: Firebase 대안 실전 가이드</h1>
+      <div class="post-meta">
+        <span>2025.04.05</span>
+        <span>13분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </section>
+
+  <article class="post-content">
+    <p>개인 프로젝트나 MVP를 빠르게 만들 때, 백엔드를 직접 구축하는 것은 시간이 많이 들립니다. Supabase는 오픈소스 Firebase 대안으로, PostgreSQL을 기반으로 인증, 실시간 구독, 스토리지까지 제공합니다. BitRoom Factory 프로젝트에서 Supabase를 실제로 사용한 경험을 공유합니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>왜 Supabase인가?</h2>
+
+    <p>Firebase를 먼저 고려했지만, 몇 가지 이유로 Supabase를 선택했습니다:</p>
+
+    <ul>
+      <li><strong>PostgreSQL:</strong> NoSQL이 아닌 관계형 DB라서 복잡한 쿼리와 JOIN이 자유로움</li>
+      <li><strong>오픈소스:</strong> 벤더 종속 없이 셀프 호스팅 가능</li>
+      <li><strong>SQL 활용:</strong> 기존 SQL 지식을 그대로 활용 가능</li>
+      <li><strong>Row Level Security:</strong> DB 레벨에서 접근 제어를 설정할 수 있음</li>
+      <li><strong>무료 티어:</strong> 개인 프로젝트에 충분한 무료 용량 제공</li>
+    </ul>
+
+    <h2>프로젝트 초기 설정</h2>
+
+    <p>Flutter 프로젝트에서 Supabase를 초기화하는 방법입니다.</p>
+
+    <pre><code>// pubspec.yaml
+dependencies:
+  supabase_flutter: ^2.3.0
+
+// main.dart
+Future&lt;void&gt; main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: const String.fromEnvironment('SUPABASE_URL'),
+    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+  );
+
+  runApp(const MyApp());
+}
+
+// Supabase 클라이언트 접근
+final supabase = Supabase.instance.client;</code></pre>
+
+    <p><code>String.fromEnvironment</code>를 사용하면 빌드 시점에 환경변수를 주입할 수 있어 키가 소스 코드에 하드코딩되는 것을 방지합니다.</p>
+
+    <h2>인증(Authentication) 구현</h2>
+
+    <p>Supabase는 이메일/비밀번호, OAuth(Google, Apple, GitHub 등), 매직 링크 등 다양한 인증 방식을 지원합니다.</p>
+
+    <pre><code>// 이메일 회원가입
+Future&lt;void&gt; signUp(String email, String password) async {
+  final response = await supabase.auth.signUp(
+    email: email,
+    password: password,
+  );
+
+  if (response.user != null) {
+    // 회원가입 성공 - 이메일 인증 대기
+  }
+}
+
+// 로그인
+Future&lt;void&gt; signIn(String email, String password) async {
+  final response = await supabase.auth.signInWithPassword(
+    email: email,
+    password: password,
+  );
+
+  // response.session에 JWT 토큰 포함
+}
+
+// Google OAuth 로그인
+Future&lt;void&gt; signInWithGoogle() async {
+  await supabase.auth.signInWithOAuth(
+    OAuthProvider.google,
+    redirectTo: 'com.bitroom.app://callback',
+  );
+}
+
+// 로그아웃
+Future&lt;void&gt; signOut() async {
+  await supabase.auth.signOut();
+}
+
+// 인증 상태 감지
+supabase.auth.onAuthStateChange.listen((data) {
+  final event = data.event;
+  if (event == AuthChangeEvent.signedIn) {
+    // 로그인 상태
+  } else if (event == AuthChangeEvent.signedOut) {
+    // 로그아웃 상태
+  }
+});</code></pre>
+
+    <div class="ad-container"></div>
+
+    <h2>데이터베이스 CRUD</h2>
+
+    <p>Supabase의 클라이언트 라이브러리를 사용하면 REST API 호출 없이 직접 DB를 조작할 수 있습니다.</p>
+
+    <pre><code>// 테이블 생성 (SQL Editor에서)
+CREATE TABLE games (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  category TEXT NOT NULL,
+  play_count INT DEFAULT 0,
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+// 데이터 조회
+final games = await supabase
+    .from('games')
+    .select()
+    .eq('category', 'puzzle')
+    .order('play_count', ascending: false)
+    .limit(20);
+
+// 데이터 삽입
+await supabase.from('games').insert({
+  'title': '숫자 퍼즐',
+  'description': '간단한 숫자 맞추기 게임',
+  'category': 'puzzle',
+  'created_by': supabase.auth.currentUser!.id,
+});
+
+// 데이터 수정
+await supabase
+    .from('games')
+    .update({'play_count': playCount + 1})
+    .eq('id', gameId);
+
+// 데이터 삭제
+await supabase
+    .from('games')
+    .delete()
+    .eq('id', gameId);</code></pre>
+
+    <h2>Row Level Security(RLS)</h2>
+
+    <p>RLS는 Supabase의 핵심 보안 기능입니다. DB 레벨에서 누가 어떤 데이터에 접근할 수 있는지를 정의합니다.</p>
+
+    <pre><code>-- RLS 활성화
+ALTER TABLE games ENABLE ROW LEVEL SECURITY;
+
+-- 모든 사용자가 게임 목록을 읽을 수 있음
+CREATE POLICY "games_select_policy" ON games
+  FOR SELECT USING (true);
+
+-- 로그인한 사용자만 게임을 생성할 수 있음
+CREATE POLICY "games_insert_policy" ON games
+  FOR INSERT WITH CHECK (auth.uid() = created_by);
+
+-- 자신이 만든 게임만 수정할 수 있음
+CREATE POLICY "games_update_policy" ON games
+  FOR UPDATE USING (auth.uid() = created_by);
+
+-- 자신이 만든 게임만 삭제할 수 있음
+CREATE POLICY "games_delete_policy" ON games
+  FOR DELETE USING (auth.uid() = created_by);</code></pre>
+
+    <p>RLS를 설정하면 클라이언트 코드에서 별도의 권한 체크 없이도 데이터 접근이 자동으로 제어됩니다. 이는 클라이언트 사이드에서의 권한 우회 시도를 원천적으로 차단합니다.</p>
+
+    <h2>실시간 구독</h2>
+
+    <p>Supabase는 PostgreSQL의 Change Data Capture를 활용하여 실시간 데이터 동기화를 제공합니다.</p>
+
+    <pre><code>// 실시간 구독 - 게임 점수 업데이트 감지
+final channel = supabase
+    .channel('game_scores')
+    .onPostgresChanges(
+      event: PostgresChangeEvent.all,
+      schema: 'public',
+      table: 'scores',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'game_id',
+        value: currentGameId,
+      ),
+      callback: (payload) {
+        final newScore = payload.newRecord;
+        // UI 업데이트
+        updateLeaderboard(newScore);
+      },
+    )
+    .subscribe();
+
+// 구독 해제
+await supabase.removeChannel(channel);</code></pre>
+
+    <h2>스토리지 활용</h2>
+
+    <p>게임 에셋, 사용자 프로필 이미지 등을 Supabase Storage에 저장합니다.</p>
+
+    <pre><code>// 이미지 업로드
+final file = File('path/to/image.png');
+final path = 'games/${gameId}/thumbnail.png';
+
+await supabase.storage
+    .from('game-assets')
+    .upload(path, file);
+
+// 공개 URL 생성
+final url = supabase.storage
+    .from('game-assets')
+    .getPublicUrl(path);</code></pre>
+
+    <h2>실무에서 겪은 주의사항</h2>
+
+    <ul>
+      <li><strong>무료 티어 제한:</strong> 500MB DB, 1GB 스토리지, 일시정지 정책(7일 비활성 시) 주의</li>
+      <li><strong>RLS 필수 활성화:</strong> RLS를 설정하지 않으면 누구나 데이터에 접근 가능</li>
+      <li><strong>Edge Function 활용:</strong> 클라이언트에서 처리하기 어려운 로직은 서버사이드 함수 활용</li>
+      <li><strong>마이그레이션 관리:</strong> 스키마 변경 시 마이그레이션 파일을 체계적으로 관리해야 함</li>
+    </ul>
+
+    <h2>마치며</h2>
+
+    <p>Supabase는 개인 프로젝트나 MVP 단계에서 백엔드 개발 시간을 크게 줄여줍니다. 특히 PostgreSQL을 기반으로 하기 때문에 관계형 데이터 모델링이 자유롭고, 추후 별도 백엔드로 마이그레이션할 때도 SQL 자산을 그대로 활용할 수 있습니다.</p>
+
+    <div class="ad-container"></div>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Spring Boot REST API의 전역 예외 처리 전략. ControllerAdvice를 활용한 일관된 에러 응답 설계와 실무 패턴.">
+  <meta name="keywords" content="Spring Boot, 예외처리, ControllerAdvice, REST API, 에러 핸들링, ExceptionHandler">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="Spring Boot REST API 예외 처리 완벽 가이드">
+  <meta property="og:description" content="ControllerAdvice를 활용한 전역 예외 처리와 일관된 에러 응답 설계">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/spring-boot-exception-handling.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/spring-boot-exception-handling.html">
+
+  <title>Spring Boot REST API 예외 처리 완벽 가이드 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">Spring Boot</span>
+      <h1>Spring Boot REST API 예외 처리 완벽 가이드</h1>
+      <div class="post-meta">
+        <span>2025.03.25</span>
+        <span>10분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </section>
+
+  <article class="post-content">
+    <p>API를 개발하면서 가장 많이 간과하는 부분이 예외 처리입니다. 클라이언트에게 일관된 에러 응답을 제공하는 것은 API의 품질을 결정하는 핵심 요소입니다. 이 글에서는 Spring Boot에서 전역 예외 처리를 설계하는 방법을 다룹니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>일관된 에러 응답 형식 설계</h2>
+
+    <p>먼저 모든 에러 응답이 따를 공통 형식을 정의합니다.</p>
+
+    <pre><code>public record ErrorResponse(
+    String code,
+    String message,
+    Map&lt;String, String&gt; errors,
+    LocalDateTime timestamp,
+    String path
+) {
+    public static ErrorResponse of(String code, String message, String path) {
+        return new ErrorResponse(code, message, Map.of(),
+            LocalDateTime.now(), path);
+    }
+
+    public static ErrorResponse of(String code, String message,
+            Map&lt;String, String&gt; errors, String path) {
+        return new ErrorResponse(code, message, errors,
+            LocalDateTime.now(), path);
+    }
+}</code></pre>
+
+    <p>클라이언트는 항상 같은 형식의 에러 응답을 받게 되므로, 프론트엔드에서 에러 처리 로직을 일관되게 구현할 수 있습니다.</p>
+
+    <h2>커스텀 예외 클래스 정의</h2>
+
+    <p>비즈니스 로직에서 발생하는 예외를 체계적으로 관리하기 위해 커스텀 예외를 정의합니다.</p>
+
+    <pre><code>// 비즈니스 예외 기본 클래스
+public abstract class BusinessException extends RuntimeException {
+    private final ErrorCode errorCode;
+
+    protected BusinessException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+    }
+
+    public ErrorCode getErrorCode() {
+        return errorCode;
+    }
+}
+
+// 에러 코드 Enum
+public enum ErrorCode {
+    // 인증 관련
+    UNAUTHORIZED("AUTH_001", "인증이 필요합니다", HttpStatus.UNAUTHORIZED),
+    TOKEN_EXPIRED("AUTH_002", "토큰이 만료되었습니다", HttpStatus.UNAUTHORIZED),
+    ACCESS_DENIED("AUTH_003", "접근 권한이 없습니다", HttpStatus.FORBIDDEN),
+
+    // 리소스 관련
+    RESOURCE_NOT_FOUND("RES_001", "리소스를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    DUPLICATE_RESOURCE("RES_002", "이미 존재하는 리소스입니다", HttpStatus.CONFLICT),
+
+    // 비즈니스 로직
+    INSUFFICIENT_STOCK("BIZ_001", "재고가 부족합니다", HttpStatus.BAD_REQUEST),
+    ORDER_ALREADY_COMPLETED("BIZ_002", "이미 완료된 주문입니다", HttpStatus.BAD_REQUEST),
+
+    // 시스템
+    INTERNAL_ERROR("SYS_001", "시스템 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR);
+
+    private final String code;
+    private final String message;
+    private final HttpStatus httpStatus;
+
+    ErrorCode(String code, String message, HttpStatus httpStatus) {
+        this.code = code;
+        this.message = message;
+        this.httpStatus = httpStatus;
+    }
+
+    // getter 생략
+}
+
+// 구체적인 예외 클래스
+public class EntityNotFoundException extends BusinessException {
+    public EntityNotFoundException(String entityName, Object id) {
+        super(ErrorCode.RESOURCE_NOT_FOUND);
+    }
+}
+
+public class InsufficientStockException extends BusinessException {
+    public InsufficientStockException() {
+        super(ErrorCode.INSUFFICIENT_STOCK);
+    }
+}</code></pre>
+
+    <h2>전역 예외 핸들러 구현</h2>
+
+    <p><code>@RestControllerAdvice</code>를 사용하여 애플리케이션 전체의 예외를 한 곳에서 처리합니다.</p>
+
+    <pre><code>@RestControllerAdvice
+@Slf4j
+public class GlobalExceptionHandler {
+
+    // 비즈니스 예외 처리
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleBusinessException(
+            BusinessException e, HttpServletRequest request) {
+
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("Business exception: {} - {}", errorCode.getCode(), e.getMessage());
+
+        return ResponseEntity
+            .status(errorCode.getHttpStatus())
+            .body(ErrorResponse.of(
+                errorCode.getCode(),
+                errorCode.getMessage(),
+                request.getRequestURI()));
+    }
+
+    // Validation 예외 처리
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleValidationException(
+            MethodArgumentNotValidException e, HttpServletRequest request) {
+
+        Map&lt;String, String&gt; errors = new HashMap&lt;&gt;();
+        e.getBindingResult().getFieldErrors().forEach(error -&gt;
+            errors.put(error.getField(), error.getDefaultMessage())
+        );
+
+        log.warn("Validation failed: {}", errors);
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse.of(
+                "VALID_001",
+                "입력값 검증에 실패했습니다",
+                errors,
+                request.getRequestURI()));
+    }
+
+    // 타입 변환 예외
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleTypeMismatch(
+            MethodArgumentTypeMismatchException e, HttpServletRequest request) {
+
+        String message = String.format("파라미터 '%s'의 값 '%s'이 올바르지 않습니다",
+            e.getName(), e.getValue());
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse.of("VALID_002", message, request.getRequestURI()));
+    }
+
+    // 그 외 모든 예외 (최후의 방어선)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleException(
+            Exception e, HttpServletRequest request) {
+
+        log.error("Unexpected error occurred", e);
+
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ErrorResponse.of(
+                "SYS_001",
+                "시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                request.getRequestURI()));
+    }
+}</code></pre>
+
+    <div class="ad-container"></div>
+
+    <h2>실전 활용 패턴</h2>
+
+    <h3>Service 레이어에서의 예외 발생</h3>
+
+    <pre><code>@Service
+@Transactional(readOnly = true)
+public class OrderService {
+
+    public OrderResponse getOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -&gt; new EntityNotFoundException("Order", orderId));
+
+        return OrderResponse.from(order);
+    }
+
+    @Transactional
+    public OrderResponse createOrder(OrderCreateRequest request) {
+        Product product = productRepository.findById(request.productId())
+            .orElseThrow(() -&gt; new EntityNotFoundException("Product", request.productId()));
+
+        if (product.getStock() &lt; request.quantity()) {
+            throw new InsufficientStockException();
+        }
+
+        Order order = Order.create(product, request.quantity());
+        return OrderResponse.from(orderRepository.save(order));
+    }
+}</code></pre>
+
+    <h3>Validation과 조합</h3>
+
+    <pre><code>public record OrderCreateRequest(
+    @NotNull(message = "상품 ID는 필수입니다")
+    Long productId,
+
+    @Min(value = 1, message = "수량은 1개 이상이어야 합니다")
+    @Max(value = 999, message = "수량은 999개 이하여야 합니다")
+    int quantity,
+
+    @NotBlank(message = "배송 주소는 필수입니다")
+    @Size(max = 200, message = "배송 주소는 200자 이하여야 합니다")
+    String shippingAddress
+) {}</code></pre>
+
+    <p><code>@Valid</code>와 함께 사용하면, 검증 실패 시 GlobalExceptionHandler의 <code>handleValidationException</code>이 호출되어 클라이언트에게 필드별 에러 메시지를 반환합니다.</p>
+
+    <h2>운영 환경에서의 주의사항</h2>
+
+    <h3>에러 메시지에 내부 정보 노출 금지</h3>
+
+    <p>SQL 오류나 스택 트레이스가 클라이언트에게 노출되면 보안 위험이 됩니다.</p>
+
+    <pre><code>// 잘못된 예시 - SQL 오류가 그대로 노출
+@ExceptionHandler(DataAccessException.class)
+public ResponseEntity&lt;ErrorResponse&gt; handleDbError(DataAccessException e) {
+    return ResponseEntity.status(500)
+        .body(ErrorResponse.of("DB_001", e.getMessage(), ""));  // 위험!
+}
+
+// 올바른 예시 - 일반적인 메시지만 노출
+@ExceptionHandler(DataAccessException.class)
+public ResponseEntity&lt;ErrorResponse&gt; handleDbError(
+        DataAccessException e, HttpServletRequest request) {
+    log.error("Database error: {}", e.getMessage(), e);  // 서버 로그에만 기록
+    return ResponseEntity.status(500)
+        .body(ErrorResponse.of("SYS_001",
+            "데이터 처리 중 오류가 발생했습니다.",
+            request.getRequestURI()));
+}</code></pre>
+
+    <h3>로깅 레벨 구분</h3>
+
+    <ul>
+      <li><code>log.warn()</code>: 비즈니스 예외 (예상 가능한 예외)</li>
+      <li><code>log.error()</code>: 시스템 예외 (예상하지 못한 예외)</li>
+    </ul>
+
+    <p>이렇게 구분하면 모니터링 시스템에서 실제 문제가 되는 에러만 알림을 받을 수 있습니다.</p>
+
+    <h2>마치며</h2>
+
+    <p>잘 설계된 예외 처리는 API의 신뢰성을 높이고, 프론트엔드 개발자와의 협업을 원활하게 합니다. 처음 프로젝트를 시작할 때 이 구조를 만들어 두면, 이후 비즈니스 로직 구현에만 집중할 수 있습니다.</p>
+
+    <div class="ad-container"></div>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
