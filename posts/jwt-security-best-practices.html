@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="실제 코드 리뷰에서 발견한 JWT 보안 취약점과 올바른 구현 방법">
+  <meta name="keywords" content="JWT, 보안, Spring Security, 인증, 취약점">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+  
+  <title>JWT 보안 실수와 올바른 구현 방법 | 재성의 개발 블로그</title>
+  
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Post Header -->
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">보안</span>
+      <h1>JWT 보안 실수와 올바른 구현 방법</h1>
+      <div class="post-meta">
+        <span>📅 2025.02.20</span>
+        <span>⏱️ 9분 읽기</span>
+        <span>👤 재성</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Post Content -->
+  <article class="post-content">
+    <p>JWT(JSON Web Token)는 현대 웹 애플리케이션에서 인증에 널리 사용됩니다. 하지만 잘못 구현하면 심각한 보안 취약점이 발생할 수 있습니다. 실제 코드 리뷰에서 발견한 사례를 바탕으로 올바른 구현 방법을 알아봅니다.</p>
+
+    <div class="ad-container">
+      <!-- 광고 영역 -->
+    </div>
+
+    <h2>흔한 JWT 보안 실수들</h2>
+
+    <h3>1. 하드코딩된 Secret Key</h3>
+
+    <p>가장 기본적이면서도 자주 발견되는 실수입니다:</p>
+
+    <pre><code>// ❌ 절대 하지 마세요
+public class JwtUtils {
+    private static final String SECRET = "mySecretKey123";
+    // ...
+}</code></pre>
+
+    <p>문제점:</p>
+    <ul>
+      <li>소스 코드에 시크릿이 노출됨</li>
+      <li>Git 히스토리에 영구 기록</li>
+      <li>환경별 키 분리 불가</li>
+    </ul>
+
+    <p>올바른 방법:</p>
+
+    <pre><code>// ✅ 환경변수 또는 외부 설정에서 주입
+@Component
+public class JwtUtils {
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+    
+    // 또는 환경변수 직접 사용
+    // private String jwtSecret = System.getenv("JWT_SECRET");
+}</code></pre>
+
+    <h3>2. 약한 Secret Key</h3>
+
+    <pre><code>// ❌ 너무 짧거나 예측 가능한 키
+jwt.secret=password123
+
+// ✅ 충분히 긴 랜덤 키 (최소 256bit)
+jwt.secret=a3K9mP2xR7vB4nQ8wE5tY0uI6oL1sD3fG8hJ...</code></pre>
+
+    <p>키 생성 방법:</p>
+
+    <pre><code>// Java에서 안전한 키 생성
+SecureRandom random = new SecureRandom();
+byte[] keyBytes = new byte[32]; // 256 bits
+random.nextBytes(keyBytes);
+String secret = Base64.getEncoder().encodeToString(keyBytes);</code></pre>
+
+    <div class="ad-container">
+      <!-- 광고 영역 -->
+    </div>
+
+    <h3>3. Algorithm None 취약점</h3>
+
+    <p>JWT 라이브러리 중 일부는 알고리즘을 "none"으로 설정한 토큰을 허용합니다:</p>
+
+    <pre><code>// ❌ 취약한 검증
+public Claims parseToken(String token) {
+    return Jwts.parser()
+        .setSigningKey(secret)
+        .parseClaimsJws(token)
+        .getBody();
+}
+
+// ✅ 알고리즘 명시적 검증
+public Claims parseToken(String token) {
+    return Jwts.parserBuilder()
+        .setSigningKey(getSigningKey())
+        .setAllowedClockSkewSeconds(60)
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
+}</code></pre>
+
+    <h3>4. 민감 정보 저장</h3>
+
+    <p>JWT의 payload는 Base64로 인코딩될 뿐, 암호화되지 않습니다:</p>
+
+    <pre><code>// ❌ 민감 정보 포함
+{
+  "sub": "user123",
+  "password": "userPassword",  // 절대 안됨!
+  "ssn": "123-45-6789",        // 주민번호 등
+  "creditCard": "1234-5678..." // 카드번호
+}
+
+// ✅ 최소한의 정보만 포함
+{
+  "sub": "user123",
+  "roles": ["USER"],
+  "exp": 1234567890
+}</code></pre>
+
+    <h3>5. 부적절한 만료 시간</h3>
+
+    <pre><code>// ❌ 만료 시간 없음 또는 너무 긴 만료
+.setExpiration(null)  // 영구 토큰
+.setExpiration(Date.from(Instant.now().plus(365, ChronoUnit.DAYS)))  // 1년
+
+// ✅ 적절한 만료 시간 설정
+// Access Token: 15분 ~ 1시간
+.setExpiration(Date.from(Instant.now().plus(30, ChronoUnit.MINUTES)))
+
+// Refresh Token: 7일 ~ 30일 (별도 관리)
+.setExpiration(Date.from(Instant.now().plus(7, ChronoUnit.DAYS)))</code></pre>
+
+    <h2>Spring Security에서 발견한 실수</h2>
+
+    <h3>PasswordEncoder 인자 순서</h3>
+
+    <p>이것은 실제 코드 리뷰에서 발견한 치명적 버그입니다:</p>
+
+    <pre><code>// ❌ 인자 순서가 뒤바뀜 - 항상 false 반환
+if (passwordEncoder.matches(user.getPassword(), rawPassword)) {
+    // 로그인 성공 처리
+}
+
+// ✅ 올바른 순서: (평문, 암호화된 값)
+if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+    // 로그인 성공 처리
+}</code></pre>
+
+    <p><code>matches(CharSequence rawPassword, String encodedPassword)</code> - 첫 번째가 평문, 두 번째가 인코딩된 값입니다.</p>
+
+    <h2>권장 구현 패턴</h2>
+
+    <h3>JWT 서비스 클래스</h3>
+
+    <pre><code>@Service
+@Slf4j
+public class JwtTokenProvider {
+    
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+    
+    @Value("${jwt.access-token-expiration-ms}")
+    private long accessTokenExpirationMs;
+    
+    @Value("${jwt.refresh-token-expiration-ms}")
+    private long refreshTokenExpirationMs;
+    
+    private Key getSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+    
+    public String generateAccessToken(UserDetails userDetails) {
+        return Jwts.builder()
+            .setSubject(userDetails.getUsername())
+            .claim("roles", userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList()))
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpirationMs))
+            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+            .compact();
+    }
+    
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            log.warn("Invalid JWT token: {}", e.getMessage());
+            return false;
+        }
+    }
+}</code></pre>
+
+    <h2>체크리스트</h2>
+
+    <p>JWT 구현 시 반드시 확인할 항목들:</p>
+
+    <ul>
+      <li>☐ Secret Key가 환경변수 또는 외부 설정에서 로드되는가?</li>
+      <li>☐ Secret Key 길이가 최소 256bit 이상인가?</li>
+      <li>☐ 알고리즘이 명시적으로 지정되어 있는가?</li>
+      <li>☐ 적절한 만료 시간이 설정되어 있는가?</li>
+      <li>☐ Payload에 민감 정보가 포함되지 않았는가?</li>
+      <li>☐ Refresh Token 메커니즘이 구현되어 있는가?</li>
+      <li>☐ 토큰 탈취 시 무효화 방법이 있는가?</li>
+    </ul>
+
+    <h2>마치며</h2>
+
+    <p>보안은 "잘 동작하면 된다"가 아닙니다. 작은 실수가 전체 시스템을 위험에 빠뜨릴 수 있습니다. 특히 인증 관련 코드는 반드시 코드 리뷰와 보안 테스트를 거쳐야 합니다.</p>
+
+    <div class="ad-container">
+      <!-- 광고 영역 -->
+    </div>
+  </article>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">© 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

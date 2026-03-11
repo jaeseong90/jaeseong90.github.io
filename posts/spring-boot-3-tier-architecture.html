@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="레거시 2-Tier 시스템을 Spring Boot 기반 3-Tier 아키텍처로 마이그레이션하는 실무 가이드">
+  <meta name="keywords" content="Spring Boot, 3-Tier, 아키텍처, 마이그레이션, ERP">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+  
+  <meta property="og:title" content="Spring Boot 3-Tier 아키텍처 마이그레이션 가이드">
+  <meta property="og:description" content="레거시 2-Tier 시스템을 현대적인 3-Tier 아키텍처로 전환하면서 얻은 실무 경험">
+  <meta property="og:type" content="article">
+  
+  <title>Spring Boot 3-Tier 아키텍처 마이그레이션 가이드 | 재성의 개발 블로그</title>
+  
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Post Header -->
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">Spring Boot</span>
+      <h1>Spring Boot 3-Tier 아키텍처 마이그레이션 가이드</h1>
+      <div class="post-meta">
+        <span>📅 2025.03.10</span>
+        <span>⏱️ 10분 읽기</span>
+        <span>👤 재성</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Post Content -->
+  <article class="post-content">
+    <p>기업용 ERP 시스템을 운영하다 보면, 언젠가는 레거시 시스템의 한계에 부딪히게 됩니다. 이번 글에서는 실제 프로젝트에서 2-Tier 아키텍처를 Spring Boot 기반 3-Tier 아키텍처로 전환하면서 겪은 경험과 베스트 프랙티스를 공유합니다.</p>
+
+    <div class="ad-container">
+      <!-- 광고 영역 -->
+    </div>
+
+    <h2>왜 3-Tier 아키텍처인가?</h2>
+
+    <p>기존 2-Tier 아키텍처에서는 클라이언트가 데이터베이스에 직접 연결하는 구조였습니다. 이 방식의 문제점은 명확합니다:</p>
+
+    <ul>
+      <li><strong>보안 취약점:</strong> DB 연결 정보가 클라이언트에 노출</li>
+      <li><strong>확장성 한계:</strong> 동시 접속자 증가 시 DB 커넥션 풀 고갈</li>
+      <li><strong>비즈니스 로직 분산:</strong> 클라이언트와 DB에 로직이 혼재</li>
+      <li><strong>유지보수 어려움:</strong> 변경 시 클라이언트 재배포 필요</li>
+    </ul>
+
+    <p>3-Tier 아키텍처로 전환하면 Presentation Layer, Business Logic Layer, Data Access Layer가 명확히 분리되어 이런 문제들을 해결할 수 있습니다.</p>
+
+    <h2>기술 스택 선정</h2>
+
+    <p>마이그레이션 프로젝트에서 선정한 기술 스택입니다:</p>
+
+    <pre><code>Backend:
+  - Spring Boot 3.x
+  - Java 17
+  - MyBatis (기존 SQL 자산 활용)
+  - MSSQL Server
+
+Build & Deploy:
+  - Gradle Kotlin DSL
+  - WAR 패키징 (Standalone Tomcat)
+  
+Security:
+  - Spring Security
+  - JWT 인증</code></pre>
+
+    <p>MyBatis를 선택한 이유는 기존 시스템의 복잡한 SQL을 그대로 활용하면서 점진적으로 마이그레이션하기 위함입니다. JPA는 추후 신규 모듈부터 도입하는 전략을 취했습니다.</p>
+
+    <h2>핵심 설계 원칙</h2>
+
+    <h3>1. 비즈니스 로직은 반드시 Service Layer에</h3>
+
+    <p>Controller에서 직접 비즈니스 로직을 처리하는 코드를 종종 볼 수 있는데, 이는 안티패턴입니다.</p>
+
+    <pre><code>// ❌ 잘못된 예시
+@RestController
+public class OrderController {
+    @PostMapping("/orders")
+    public ResponseEntity&lt;?&gt; createOrder(@RequestBody OrderDto dto) {
+        // Controller에서 비즈니스 로직 처리
+        if (dto.getQuantity() &gt; inventory.getStock()) {
+            throw new RuntimeException("재고 부족");
+        }
+        // ... 복잡한 로직
+    }
+}
+
+// ✅ 올바른 예시
+@RestController
+public class OrderController {
+    @PostMapping("/orders")
+    public ResponseEntity&lt;?&gt; createOrder(@RequestBody @Valid OrderDto dto) {
+        return ResponseEntity.ok(orderService.createOrder(dto));
+    }
+}</code></pre>
+
+    <h3>2. API 응답 번들링</h3>
+
+    <p>화면 하나를 그리기 위해 여러 번의 API 호출이 필요한 경우, 서버 사이드에서 데이터를 번들링하여 한 번에 응답하는 것이 효율적입니다.</p>
+
+    <pre><code>@GetMapping("/dashboard")
+public ResponseEntity&lt;DashboardResponse&gt; getDashboard() {
+    return ResponseEntity.ok(
+        DashboardResponse.builder()
+            .summary(summaryService.getSummary())
+            .recentOrders(orderService.getRecentOrders())
+            .notifications(notificationService.getUnread())
+            .build()
+    );
+}</code></pre>
+
+    <h3>3. 트랜잭션 무결성 보장</h3>
+
+    <p>여러 테이블을 수정하는 작업은 반드시 <code>@Transactional</code>로 묶어야 합니다. 특히 배치 작업에서 이 부분을 놓치면 데이터 불일치 문제가 발생합니다.</p>
+
+    <div class="ad-container">
+      <!-- 광고 영역 -->
+    </div>
+
+    <h2>실제 마이그레이션 과정에서 발견한 이슈들</h2>
+
+    <h3>JWT 보안 취약점</h3>
+
+    <p>코드 리뷰 중 발견한 심각한 보안 이슈입니다:</p>
+
+    <pre><code>// ❌ 하드코딩된 JWT Secret
+private static final String SECRET = "mySecretKey123";
+
+// ✅ 환경변수에서 주입
+@Value("${jwt.secret}")
+private String jwtSecret;</code></pre>
+
+    <h3>PasswordEncoder 인자 순서 오류</h3>
+
+    <p>Spring Security의 <code>passwordEncoder.matches()</code> 메서드 인자 순서가 뒤바뀐 코드를 발견했습니다:</p>
+
+    <pre><code>// ❌ 잘못된 순서 (항상 false 반환)
+passwordEncoder.matches(encodedPassword, rawPassword);
+
+// ✅ 올바른 순서
+passwordEncoder.matches(rawPassword, encodedPassword);</code></pre>
+
+    <p>이런 실수는 테스트 코드가 없으면 발견하기 어렵습니다. 인증 관련 로직은 반드시 단위 테스트를 작성하세요.</p>
+
+    <h2>마이그레이션 단계별 전략</h2>
+
+    <p>Big Bang 방식보다는 점진적 마이그레이션을 추천합니다:</p>
+
+    <ol>
+      <li><strong>1단계:</strong> API Gateway 도입 - 기존 시스템과 신규 API 공존</li>
+      <li><strong>2단계:</strong> 핵심 모듈부터 마이그레이션</li>
+      <li><strong>3단계:</strong> 데이터 동기화 구간 운영</li>
+      <li><strong>4단계:</strong> 전체 전환 및 레거시 제거</li>
+    </ol>
+
+    <h2>마치며</h2>
+
+    <p>아키텍처 마이그레이션은 단순한 기술 전환이 아닙니다. 기존 비즈니스 로직의 이해, 데이터 정합성 보장, 그리고 팀의 학습 곡선까지 고려해야 합니다.</p>
+
+    <p>이 글이 비슷한 마이그레이션 프로젝트를 진행하시는 분들께 도움이 되었으면 합니다. 궁금한 점이 있으시면 댓글이나 이메일로 문의해 주세요.</p>
+
+    <div class="ad-container">
+      <!-- 광고 영역 -->
+    </div>
+  </article>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">© 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

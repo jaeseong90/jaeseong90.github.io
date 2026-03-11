@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Flutter와 Riverpod, Supabase를 활용한 모바일 앱 실전 아키텍처 가이드">
+  <meta name="keywords" content="Flutter, Riverpod, Supabase, 모바일 앱, 상태관리">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+  
+  <title>Flutter + Riverpod + Supabase 실전 아키텍처 | 재성의 개발 블로그</title>
+  
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Post Header -->
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">Flutter</span>
+      <h1>Flutter + Riverpod + Supabase 실전 아키텍처</h1>
+      <div class="post-meta">
+        <span>📅 2025.03.05</span>
+        <span>⏱️ 12분 읽기</span>
+        <span>👤 재성</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Post Content -->
+  <article class="post-content">
+    <p>모바일 앱 개발에서 상태관리와 백엔드 연동은 항상 고민되는 부분입니다. 이 글에서는 BitRoom Factory 프로젝트를 진행하면서 정립한 Flutter + Riverpod + Supabase 아키텍처를 공유합니다.</p>
+
+    <div class="ad-container">
+      <!-- 광고 영역 -->
+    </div>
+
+    <h2>왜 이 조합인가?</h2>
+
+    <h3>Riverpod 선택 이유</h3>
+
+    <p>Flutter의 상태관리 솔루션은 다양합니다. Provider, Bloc, GetX, Riverpod 등 각각 장단점이 있지만, Riverpod을 선택한 이유는:</p>
+
+    <ul>
+      <li><strong>컴파일 타임 안전성:</strong> Provider와 달리 타입 안전성이 보장됨</li>
+      <li><strong>테스트 용이성:</strong> Provider를 쉽게 오버라이드 가능</li>
+      <li><strong>코드 생성:</strong> riverpod_generator로 보일러플레이트 감소</li>
+      <li><strong>유연한 스코핑:</strong> 전역, 가족, 로컬 스코프 자유롭게 설정</li>
+    </ul>
+
+    <h3>Supabase 선택 이유</h3>
+
+    <p>Firebase의 대안으로 Supabase를 선택했습니다:</p>
+
+    <ul>
+      <li><strong>PostgreSQL 기반:</strong> 관계형 DB의 강력함 활용</li>
+      <li><strong>오픈소스:</strong> 벤더 종속 없음, 셀프 호스팅 가능</li>
+      <li><strong>관대한 무료 티어:</strong> 사이드 프로젝트에 적합</li>
+      <li><strong>실시간 구독:</strong> 실시간 동기화 기능 제공</li>
+    </ul>
+
+    <h2>프로젝트 구조</h2>
+
+    <p>Feature-first 구조를 채택했습니다:</p>
+
+    <pre><code>lib/
+├── main.dart
+├── core/
+│   ├── config/
+│   │   └── supabase_config.dart
+│   ├── providers/
+│   │   └── supabase_provider.dart
+│   └── utils/
+│       └── logger.dart
+├── features/
+│   ├── auth/
+│   │   ├── data/
+│   │   │   ├── repositories/
+│   │   │   └── models/
+│   │   ├── domain/
+│   │   │   └── entities/
+│   │   └── presentation/
+│   │       ├── providers/
+│   │       ├── screens/
+│   │       └── widgets/
+│   ├── game/
+│   │   └── ...
+│   └── leaderboard/
+│       └── ...
+└── shared/
+    ├── widgets/
+    └── extensions/</code></pre>
+
+    <h2>핵심 구현 패턴</h2>
+
+    <h3>1. Supabase 클라이언트 Provider</h3>
+
+    <pre><code>// core/providers/supabase_provider.dart
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+part 'supabase_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+SupabaseClient supabaseClient(SupabaseClientRef ref) {
+  return Supabase.instance.client;
+}
+
+@Riverpod(keepAlive: true)
+Stream&lt;AuthState&gt; authStateChanges(AuthStateChangesRef ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return client.auth.onAuthStateChange;
+}</code></pre>
+
+    <h3>2. Repository 패턴</h3>
+
+    <pre><code>// features/game/data/repositories/score_repository.dart
+@riverpod
+class ScoreRepository extends _$ScoreRepository {
+  @override
+  FutureOr&lt;void&gt; build() {}
+
+  Future&lt;void&gt; saveScore(int score, String gameId) async {
+    final client = ref.read(supabaseClientProvider);
+    final userId = client.auth.currentUser?.id;
+    
+    await client.from('scores').insert({
+      'user_id': userId,
+      'game_id': gameId,
+      'score': score,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future&lt;List&lt;Score&gt;&gt; getTopScores(String gameId, {int limit = 10}) async {
+    final client = ref.read(supabaseClientProvider);
+    
+    final response = await client
+        .from('scores')
+        .select('*, profiles(username, avatar_url)')
+        .eq('game_id', gameId)
+        .order('score', ascending: false)
+        .limit(limit);
+    
+    return response.map((json) =&gt; Score.fromJson(json)).toList();
+  }
+}</code></pre>
+
+    <div class="ad-container">
+      <!-- 광고 영역 -->
+    </div>
+
+    <h3>3. AsyncValue 활용</h3>
+
+    <p>Riverpod의 AsyncValue를 활용하면 로딩, 에러, 데이터 상태를 깔끔하게 처리할 수 있습니다:</p>
+
+    <pre><code>@riverpod
+Future&lt;List&lt;Score&gt;&gt; topScores(TopScoresRef ref, String gameId) async {
+  final repository = ref.watch(scoreRepositoryProvider.notifier);
+  return repository.getTopScores(gameId);
+}
+
+// UI에서 사용
+class LeaderboardScreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scoresAsync = ref.watch(topScoresProvider(gameId));
+    
+    return scoresAsync.when(
+      data: (scores) =&gt; ListView.builder(
+        itemCount: scores.length,
+        itemBuilder: (_, i) =&gt; ScoreTile(score: scores[i]),
+      ),
+      loading: () =&gt; const Center(child: CircularProgressIndicator()),
+      error: (e, _) =&gt; ErrorWidget(message: e.toString()),
+    );
+  }
+}</code></pre>
+
+    <h2>shared_game_kit 패키지</h2>
+
+    <p>여러 게임에서 공통으로 사용하는 기능을 별도 패키지로 분리했습니다:</p>
+
+    <pre><code>shared_game_kit/
+├── lib/
+│   ├── src/
+│   │   ├── ads/           # AdMob 통합
+│   │   ├── analytics/     # 분석 이벤트
+│   │   ├── audio/         # 효과음/BGM
+│   │   ├── auth/          # 인증 공통 로직
+│   │   ├── iap/           # 인앱 결제
+│   │   └── ui/            # 공통 위젯
+│   └── shared_game_kit.dart
+└── pubspec.yaml</code></pre>
+
+    <p>각 게임 앱에서는 이 패키지를 의존성으로 추가합니다:</p>
+
+    <pre><code># pubspec.yaml
+dependencies:
+  shared_game_kit:
+    path: ../packages/shared_game_kit</code></pre>
+
+    <h2>실전 팁</h2>
+
+    <h3>1. keepAlive 사용 시 주의</h3>
+
+    <p><code>keepAlive: true</code>는 Provider가 dispose되지 않도록 합니다. 인증 상태처럼 앱 전체에서 유지해야 하는 경우에만 사용하세요.</p>
+
+    <h3>2. 에러 처리 중앙화</h3>
+
+    <pre><code>extension AsyncValueX&lt;T&gt; on AsyncValue&lt;T&gt; {
+  Widget buildWidget({
+    required Widget Function(T data) data,
+    Widget Function()? loading,
+    Widget Function(Object error)? error,
+  }) {
+    return when(
+      data: data,
+      loading: loading ?? () =&gt; const LoadingIndicator(),
+      error: (e, _) =&gt; error?.call(e) ?? ErrorDisplay(error: e),
+    );
+  }
+}</code></pre>
+
+    <h3>3. Supabase RLS 활용</h3>
+
+    <p>Row Level Security로 데이터 접근을 제어합니다:</p>
+
+    <pre><code>-- 사용자는 자신의 데이터만 수정 가능
+CREATE POLICY "Users can update own data" ON profiles
+  FOR UPDATE USING (auth.uid() = user_id);</code></pre>
+
+    <h2>마치며</h2>
+
+    <p>이 아키텍처로 BitRoom Factory의 여러 게임을 빠르게 개발하고 있습니다. 핵심은 공통 로직의 재사용과 일관된 패턴 적용입니다.</p>
+
+    <p>다음 글에서는 AdMob 통합과 수익화 전략에 대해 다루겠습니다.</p>
+
+    <div class="ad-container">
+      <!-- 광고 영역 -->
+    </div>
+  </article>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">© 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
