@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Spring Boot 운영 환경을 위한 로깅 전략. 구조화된 로그 설계, 로그 레벨 관리, MDC 활용법과 실무 패턴.">
+  <meta name="keywords" content="Spring Boot, 로깅, Logback, SLF4J, MDC, 운영, 모니터링">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="Spring Boot 운영 환경을 위한 로깅 전략">
+  <meta property="og:description" content="구조화된 로그 설계와 MDC 활용법으로 운영 효율성을 높이는 방법">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/spring-boot-logging-strategy.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/spring-boot-logging-strategy.html">
+
+  <title>Spring Boot 운영 환경을 위한 로깅 전략 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">Spring Boot</span>
+      <h1>Spring Boot 운영 환경을 위한 로깅 전략</h1>
+      <div class="post-meta">
+        <span>2025.04.01</span>
+        <span>11분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </section>
+
+  <article class="post-content">
+    <p>운영 중인 시스템에서 문제가 발생했을 때, 로그는 원인을 추적하는 가장 중요한 단서입니다. 하지만 많은 프로젝트에서 로깅은 개발 단계에서 충분히 설계되지 않습니다. 이 글에서는 실제 운영 환경에서 효과적인 로깅 전략을 다룹니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>로깅의 기본 원칙</h2>
+
+    <h3>1. 적절한 로그 레벨 사용</h3>
+
+    <p>로그 레벨을 올바르게 사용하지 않으면, 중요한 정보가 대량의 불필요한 로그에 묻히게 됩니다.</p>
+
+    <pre><code>// ERROR: 즉시 대응이 필요한 시스템 장애
+log.error("DB 연결 실패: {}", e.getMessage(), e);
+
+// WARN: 잠재적 문제, 비정상 동작이지만 시스템은 동작
+log.warn("API 응답 시간 초과: {}ms (임계값: {}ms)", elapsed, threshold);
+
+// INFO: 주요 비즈니스 이벤트 기록
+log.info("주문 생성 완료: orderId={}, userId={}, amount={}",
+    order.getId(), userId, order.getTotalAmount());
+
+// DEBUG: 개발/디버깅 시 필요한 상세 정보
+log.debug("쿼리 파라미터: {}", params);
+
+// TRACE: 매우 상세한 실행 흐름 (운영에서는 거의 사용하지 않음)
+log.trace("메서드 진입: processOrder({})", orderId);</code></pre>
+
+    <h3>2. 구조화된 로그 메시지</h3>
+
+    <p>로그 메시지에 검색 가능한 키-값 쌍을 포함하면 로그 분석이 훨씬 용이합니다.</p>
+
+    <pre><code>// 잘못된 예시 - 검색/파싱이 어려움
+log.info("사용자 " + userId + "가 상품 " + productId + "를 주문했습니다.");
+
+// 올바른 예시 - 구조화된 메시지
+log.info("주문 처리 완료 [userId={}, productId={}, orderId={}, amount={}]",
+    userId, productId, orderId, amount);</code></pre>
+
+    <h2>MDC(Mapped Diagnostic Context) 활용</h2>
+
+    <p>MDC는 같은 요청에 대한 모든 로그를 하나의 추적 ID로 연결해주는 기능입니다. 분산 환경에서 특정 요청의 전체 처리 흐름을 추적할 때 필수적입니다.</p>
+
+    <pre><code>@Component
+public class RequestTraceFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain chain) throws IOException, ServletException {
+
+        String traceId = UUID.randomUUID().toString().substring(0, 8);
+        String userId = extractUserId((HttpServletRequest) request);
+
+        MDC.put("traceId", traceId);
+        MDC.put("userId", userId != null ? userId : "anonymous");
+
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            MDC.clear();  // 반드시 정리!
+        }
+    }
+}</code></pre>
+
+    <p>Logback 설정에서 MDC 값을 로그 패턴에 포함합니다:</p>
+
+    <pre><code>&lt;!-- logback-spring.xml --&gt;
+&lt;configuration&gt;
+  &lt;appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender"&gt;
+    &lt;encoder&gt;
+      &lt;pattern&gt;%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] [%X{userId}] %-5level %logger{36} - %msg%n&lt;/pattern&gt;
+    &lt;/encoder&gt;
+  &lt;/appender&gt;
+&lt;/configuration&gt;</code></pre>
+
+    <p>이렇게 설정하면 모든 로그에 traceId가 포함되어, 특정 요청의 전체 처리 과정을 한눈에 볼 수 있습니다:</p>
+
+    <pre><code>2025-04-01 10:30:15.123 [http-nio-8080-exec-1] [a1b2c3d4] [user123] INFO  OrderController - 주문 요청 수신 [productId=100, quantity=2]
+2025-04-01 10:30:15.145 [http-nio-8080-exec-1] [a1b2c3d4] [user123] DEBUG OrderService - 재고 확인 [productId=100, stock=50]
+2025-04-01 10:30:15.200 [http-nio-8080-exec-1] [a1b2c3d4] [user123] INFO  OrderService - 주문 생성 완료 [orderId=5001, amount=50000]</code></pre>
+
+    <div class="ad-container"></div>
+
+    <h2>운영 환경 Logback 설정</h2>
+
+    <p>환경별로 다른 로그 설정을 적용하는 것이 중요합니다. Spring Profile을 활용하여 환경별 설정을 분리합니다.</p>
+
+    <pre><code>&lt;configuration&gt;
+  &lt;!-- 공통 설정 --&gt;
+  &lt;property name="LOG_PATH" value="./logs" /&gt;
+  &lt;property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n" /&gt;
+
+  &lt;!-- 개발 환경 --&gt;
+  &lt;springProfile name="local,dev"&gt;
+    &lt;root level="DEBUG"&gt;
+      &lt;appender-ref ref="CONSOLE" /&gt;
+    &lt;/root&gt;
+  &lt;/springProfile&gt;
+
+  &lt;!-- 운영 환경 --&gt;
+  &lt;springProfile name="prod"&gt;
+    &lt;appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+      &lt;file&gt;${LOG_PATH}/application.log&lt;/file&gt;
+      &lt;rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy"&gt;
+        &lt;fileNamePattern&gt;${LOG_PATH}/application.%d{yyyy-MM-dd}.%i.log.gz&lt;/fileNamePattern&gt;
+        &lt;maxFileSize&gt;100MB&lt;/maxFileSize&gt;
+        &lt;maxHistory&gt;30&lt;/maxHistory&gt;
+        &lt;totalSizeCap&gt;3GB&lt;/totalSizeCap&gt;
+      &lt;/rollingPolicy&gt;
+      &lt;encoder&gt;
+        &lt;pattern&gt;${LOG_PATTERN}&lt;/pattern&gt;
+      &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- ERROR 전용 파일 --&gt;
+    &lt;appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+      &lt;filter class="ch.qos.logback.classic.filter.LevelFilter"&gt;
+        &lt;level&gt;ERROR&lt;/level&gt;
+        &lt;onMatch&gt;ACCEPT&lt;/onMatch&gt;
+        &lt;onMismatch&gt;DENY&lt;/onMismatch&gt;
+      &lt;/filter&gt;
+      &lt;file&gt;${LOG_PATH}/error.log&lt;/file&gt;
+      &lt;rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy"&gt;
+        &lt;fileNamePattern&gt;${LOG_PATH}/error.%d{yyyy-MM-dd}.%i.log.gz&lt;/fileNamePattern&gt;
+        &lt;maxFileSize&gt;50MB&lt;/maxFileSize&gt;
+        &lt;maxHistory&gt;90&lt;/maxHistory&gt;
+      &lt;/rollingPolicy&gt;
+      &lt;encoder&gt;
+        &lt;pattern&gt;${LOG_PATTERN}&lt;/pattern&gt;
+      &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;root level="INFO"&gt;
+      &lt;appender-ref ref="FILE" /&gt;
+      &lt;appender-ref ref="ERROR_FILE" /&gt;
+    &lt;/root&gt;
+  &lt;/springProfile&gt;
+&lt;/configuration&gt;</code></pre>
+
+    <h2>API 요청/응답 로깅</h2>
+
+    <p>API의 요청과 응답을 로깅하면 문제 추적이 훨씬 수월합니다. 다만 민감한 정보는 마스킹해야 합니다.</p>
+
+    <pre><code>@Aspect
+@Component
+@Slf4j
+public class ApiLoggingAspect {
+
+    @Around("@within(org.springframework.web.bind.annotation.RestController)")
+    public Object logApiCall(ProceedingJoinPoint joinPoint) throws Throwable {
+        long startTime = System.currentTimeMillis();
+        String methodName = joinPoint.getSignature().toShortString();
+
+        log.info("API 요청: {} args={}", methodName,
+            maskSensitiveData(joinPoint.getArgs()));
+
+        try {
+            Object result = joinPoint.proceed();
+            long elapsed = System.currentTimeMillis() - startTime;
+
+            log.info("API 응답: {} elapsed={}ms", methodName, elapsed);
+
+            if (elapsed &gt; 3000) {
+                log.warn("느린 API 감지: {} elapsed={}ms", methodName, elapsed);
+            }
+
+            return result;
+        } catch (Exception e) {
+            long elapsed = System.currentTimeMillis() - startTime;
+            log.error("API 오류: {} elapsed={}ms error={}",
+                methodName, elapsed, e.getMessage());
+            throw e;
+        }
+    }
+}</code></pre>
+
+    <h2>로그에 남기면 안 되는 정보</h2>
+
+    <p>보안과 개인정보보호를 위해 다음 정보는 절대 로그에 남기면 안 됩니다:</p>
+
+    <ul>
+      <li>비밀번호, JWT 토큰 전체 값</li>
+      <li>신용카드 번호, 주민등록번호</li>
+      <li>개인 연락처, 상세 주소</li>
+      <li>API 키, Secret Key</li>
+    </ul>
+
+    <pre><code>// 민감 데이터 마스킹 예시
+private String maskSensitiveData(Object[] args) {
+    return Arrays.stream(args)
+        .map(arg -&gt; {
+            if (arg == null) return "null";
+            String str = arg.toString();
+            // 이메일 마스킹
+            str = str.replaceAll("([\\w.]+)@([\\w.]+)", "***@$2");
+            // 전화번호 마스킹
+            str = str.replaceAll("\\d{3}-\\d{4}-\\d{4}", "***-****-****");
+            return str;
+        })
+        .collect(Collectors.joining(", "));
+}</code></pre>
+
+    <h2>마치며</h2>
+
+    <p>좋은 로그는 운영 안정성의 핵심입니다. 프로젝트 초기에 로깅 전략을 수립하고, 팀 전체가 일관된 로깅 규칙을 따르면 장애 대응 시간을 크게 단축할 수 있습니다. 특히 MDC를 활용한 요청 추적은 분산 환경에서 반드시 도입해야 할 패턴입니다.</p>
+
+    <div class="ad-container"></div>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

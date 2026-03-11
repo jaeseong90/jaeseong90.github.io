@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MyBatis에서 JPA로 점진적 마이그레이션하는 실무 가이드. 레거시 SQL 자산을 보존하면서 JPA를 도입하는 전략과 주의사항.">
+  <meta name="keywords" content="MyBatis, JPA, Spring Data JPA, 마이그레이션, ORM, Spring Boot">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="MyBatis에서 JPA로 점진적 마이그레이션 전략">
+  <meta property="og:description" content="레거시 SQL 자산을 보존하면서 JPA를 도입하는 실전 가이드">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/mybatis-to-jpa-migration.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/mybatis-to-jpa-migration.html">
+
+  <title>MyBatis에서 JPA로 점진적 마이그레이션 전략 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">Spring Boot</span>
+      <h1>MyBatis에서 JPA로 점진적 마이그레이션 전략</h1>
+      <div class="post-meta">
+        <span>2025.03.22</span>
+        <span>13분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </section>
+
+  <article class="post-content">
+    <p>엔터프라이즈 환경에서 MyBatis는 오랫동안 데이터 접근 기술의 표준이었습니다. 하지만 새로운 모듈을 개발하면서 JPA의 생산성이 필요해지는 시점이 옵니다. 이 글에서는 기존 MyBatis를 유지하면서 JPA를 점진적으로 도입한 경험을 공유합니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>MyBatis와 JPA의 공존이 가능한가?</h2>
+
+    <p>결론부터 말하면 가능합니다. Spring Boot에서는 MyBatis와 JPA를 동시에 사용할 수 있으며, 같은 데이터베이스에 대해 두 기술을 혼용할 수 있습니다.</p>
+
+    <pre><code>dependencies {
+    // MyBatis (기존)
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+
+    // JPA (신규)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // 동일한 DB 드라이버
+    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+}</code></pre>
+
+    <p>다만 주의할 점이 있습니다. 같은 테이블에 대해 MyBatis와 JPA를 동시에 사용하면 영속성 컨텍스트와 직접 SQL이 충돌할 수 있습니다. 이에 대해 아래에서 자세히 다루겠습니다.</p>
+
+    <h2>점진적 마이그레이션 전략</h2>
+
+    <h3>Phase 1: 신규 모듈은 JPA로</h3>
+
+    <p>가장 안전한 접근법은 신규 테이블과 모듈은 JPA로 개발하고, 기존 모듈은 MyBatis를 유지하는 것입니다.</p>
+
+    <pre><code>// 신규 모듈 - JPA Entity
+@Entity
+@Table(name = "notification")
+public class Notification {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(columnDefinition = "NVARCHAR(MAX)")
+    private String content;
+
+    @Enumerated(EnumType.STRING)
+    private NotificationType type;
+
+    @CreatedDate
+    private LocalDateTime createdAt;
+}
+
+// 신규 모듈 - JPA Repository
+public interface NotificationRepository extends JpaRepository&lt;Notification, Long&gt; {
+    List&lt;Notification&gt; findByTypeAndCreatedAtAfter(
+        NotificationType type, LocalDateTime after);
+}</code></pre>
+
+    <h3>Phase 2: 읽기 전용 Entity 도입</h3>
+
+    <p>기존 MyBatis가 관리하는 테이블에 대해 읽기 전용 JPA Entity를 만들 수 있습니다. 이렇게 하면 조회 로직에서 JPA의 편리한 메서드를 활용할 수 있습니다.</p>
+
+    <pre><code>@Entity
+@Table(name = "employee")
+@Immutable  // Hibernate가 UPDATE/INSERT를 시도하지 않음
+public class EmployeeReadOnly {
+    @Id
+    private Long empNo;
+
+    @Column(name = "emp_name")
+    private String name;
+
+    @Column(name = "dept_code")
+    private String departmentCode;
+}
+
+// 읽기 전용 Repository
+public interface EmployeeReadOnlyRepository extends JpaRepository&lt;EmployeeReadOnly, Long&gt; {
+    List&lt;EmployeeReadOnly&gt; findByDepartmentCode(String deptCode);
+
+    @Query("SELECT e FROM EmployeeReadOnly e WHERE e.name LIKE %:keyword%")
+    Page&lt;EmployeeReadOnly&gt; searchByName(@Param("keyword") String keyword, Pageable pageable);
+}</code></pre>
+
+    <h3>Phase 3: 쓰기 작업 마이그레이션</h3>
+
+    <p>충분한 테스트 후에 점진적으로 쓰기 작업도 JPA로 전환합니다. 이때 핵심은 한 테이블에 대해 MyBatis와 JPA의 쓰기가 동시에 발생하지 않도록 하는 것입니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>영속성 컨텍스트 충돌 문제</h2>
+
+    <p>JPA와 MyBatis를 같은 테이블에서 혼용할 때 가장 주의해야 할 부분입니다.</p>
+
+    <pre><code>@Service
+@Transactional
+public class OrderService {
+
+    // JPA로 주문 조회
+    public Order getOrder(Long orderId) {
+        return orderRepository.findById(orderId).orElseThrow();
+    }
+
+    // MyBatis로 주문 상태 업데이트 (위험!)
+    public void updateStatus(Long orderId, String status) {
+        orderMapper.updateStatus(orderId, status);
+        // JPA 영속성 컨텍스트에 캐시된 Order 객체는
+        // 여전히 이전 상태를 가지고 있음!
+    }
+}</code></pre>
+
+    <p>이 문제를 해결하는 방법은 다음과 같습니다:</p>
+
+    <pre><code>@Service
+@Transactional
+public class OrderService {
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    public void updateStatus(Long orderId, String status) {
+        orderMapper.updateStatus(orderId, status);
+
+        // 영속성 컨텍스트를 초기화하여
+        // 다음 조회 시 DB에서 최신 데이터를 가져오도록 함
+        entityManager.clear();
+    }
+}</code></pre>
+
+    <h2>MSSQL 특화 설정</h2>
+
+    <p>기업 환경에서 많이 사용하는 MSSQL과 JPA를 연동할 때 필요한 설정입니다.</p>
+
+    <pre><code>spring:
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    hibernate:
+      ddl-auto: validate  # 운영에서는 반드시 validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: dbo
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true</code></pre>
+
+    <p><code>ddl-auto: validate</code>는 매우 중요합니다. Entity와 실제 테이블 구조가 일치하지 않으면 애플리케이션 기동 시 오류를 발생시켜 잠재적인 데이터 이슈를 사전에 방지합니다.</p>
+
+    <h2>성능 비교와 최적화</h2>
+
+    <h3>N+1 문제 해결</h3>
+
+    <p>JPA를 처음 도입할 때 가장 많이 겪는 성능 이슈입니다. 연관 엔티티를 조회할 때 불필요한 쿼리가 대량 발생하는 문제입니다.</p>
+
+    <pre><code>// N+1 문제 발생
+@Entity
+public class Department {
+    @OneToMany(mappedBy = "department")
+    private List&lt;Employee&gt; employees;  // Lazy Loading
+}
+
+// 해결: Fetch Join 사용
+@Query("SELECT d FROM Department d JOIN FETCH d.employees WHERE d.id = :id")
+Optional&lt;Department&gt; findByIdWithEmployees(@Param("id") Long id);
+
+// 또는 EntityGraph 사용
+@EntityGraph(attributePaths = {"employees"})
+Optional&lt;Department&gt; findById(Long id);</code></pre>
+
+    <h3>대량 데이터 처리</h3>
+
+    <p>배치 처리에서 JPA는 MyBatis보다 불리할 수 있습니다. 대량 INSERT의 경우 JPA의 batch 설정을 활용하거나, 해당 부분만 MyBatis 또는 JDBC Template을 사용하는 것이 실용적입니다.</p>
+
+    <pre><code>// JPA Batch Insert (hibernate.jdbc.batch_size=50 설정 필요)
+@Transactional
+public void batchInsert(List&lt;Item&gt; items) {
+    for (int i = 0; i &lt; items.size(); i++) {
+        entityManager.persist(items.get(i));
+        if (i % 50 == 0) {
+            entityManager.flush();
+            entityManager.clear();
+        }
+    }
+}</code></pre>
+
+    <h2>마이그레이션 체크리스트</h2>
+
+    <ol>
+      <li>MyBatis와 JPA 의존성이 충돌하지 않는지 확인</li>
+      <li>트랜잭션 매니저 설정 검증 (JpaTransactionManager가 MyBatis도 처리 가능)</li>
+      <li>Entity와 테이블 매핑이 정확한지 validate 모드로 확인</li>
+      <li>영속성 컨텍스트 충돌 지점 식별 및 처리</li>
+      <li>N+1 문제 체크 (Hibernate SQL 로그 활성화)</li>
+      <li>대량 데이터 처리 성능 테스트</li>
+      <li>기존 MyBatis 단위 테스트가 여전히 통과하는지 확인</li>
+    </ol>
+
+    <h2>마치며</h2>
+
+    <p>MyBatis에서 JPA로의 전환은 한 번에 이루어질 수 없으며, 그럴 필요도 없습니다. 각 기술의 장점을 살리면서 점진적으로 전환하는 것이 가장 안전하고 실용적인 접근법입니다. 기존 복잡한 SQL은 MyBatis가, 신규 CRUD는 JPA가 담당하는 하이브리드 구조가 현실적인 해답입니다.</p>
+
+    <div class="ad-container"></div>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

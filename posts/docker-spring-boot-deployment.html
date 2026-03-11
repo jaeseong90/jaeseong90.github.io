@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Spring Boot 애플리케이션을 Docker로 컨테이너화하고 운영 환경에 배포하는 실무 가이드. Dockerfile 작성부터 멀티스테이지 빌드, 컨테이너 최적화까지.">
+  <meta name="keywords" content="Docker, Spring Boot, 컨테이너, 배포, DevOps, Dockerfile, 멀티스테이지 빌드">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="Docker로 Spring Boot 배포 자동화하기">
+  <meta property="og:description" content="Spring Boot 애플리케이션을 Docker로 컨테이너화하고 운영 환경에 배포하는 실무 가이드">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/docker-spring-boot-deployment.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/docker-spring-boot-deployment.html">
+
+  <title>Docker로 Spring Boot 배포 자동화하기 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">Docker</span>
+      <h1>Docker로 Spring Boot 배포 자동화하기</h1>
+      <div class="post-meta">
+        <span>2025.03.15</span>
+        <span>12분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </section>
+
+  <article class="post-content">
+    <p>엔터프라이즈 환경에서 Spring Boot 애플리케이션을 배포할 때, Docker 컨테이너를 활용하면 환경 일관성과 배포 효율성을 크게 높일 수 있습니다. 이 글에서는 실제 운영 환경에서 사용한 Docker 기반 배포 전략을 공유합니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>왜 Docker인가?</h2>
+
+    <p>전통적인 WAR 배포 방식에서 Docker로 전환한 이유는 명확했습니다. 기존에는 개발 환경과 운영 환경의 차이로 인해 배포 후 예상치 못한 오류가 빈번했습니다. 대표적인 문제들이 있었습니다:</p>
+
+    <ul>
+      <li><strong>JDK 버전 불일치:</strong> 개발은 JDK 17, 운영은 JDK 11로 설정된 경우</li>
+      <li><strong>Tomcat 설정 차이:</strong> 로컬과 운영 서버의 server.xml 설정이 다른 경우</li>
+      <li><strong>OS 라이브러리 의존성:</strong> 특정 네이티브 라이브러리가 운영 서버에 없는 경우</li>
+      <li><strong>환경변수 누락:</strong> 운영 환경에 필요한 환경변수가 설정되지 않은 경우</li>
+    </ul>
+
+    <p>Docker를 사용하면 애플리케이션과 실행 환경을 하나의 이미지로 패키징하여 이런 문제를 원천적으로 차단할 수 있습니다.</p>
+
+    <h2>Dockerfile 작성: 멀티스테이지 빌드</h2>
+
+    <p>운영 이미지의 크기를 최소화하기 위해 멀티스테이지 빌드를 사용합니다. 빌드에 필요한 도구들은 최종 이미지에 포함되지 않습니다.</p>
+
+    <pre><code># Stage 1: Build
+FROM gradle:8.5-jdk17 AS builder
+WORKDIR /app
+COPY build.gradle.kts settings.gradle.kts ./
+COPY gradle ./gradle
+RUN gradle dependencies --no-daemon
+COPY src ./src
+RUN gradle bootJar --no-daemon
+
+# Stage 2: Runtime
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+RUN addgroup -S appgroup &amp;&amp; adduser -S appuser -G appgroup
+
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+RUN chown appuser:appgroup app.jar
+USER appuser
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", \
+  "-XX:+UseContainerSupport", \
+  "-XX:MaxRAMPercentage=75.0", \
+  "-Djava.security.egd=file:/dev/./urandom", \
+  "-jar", "app.jar"]</code></pre>
+
+    <p>핵심 포인트를 정리하면 다음과 같습니다:</p>
+
+    <ul>
+      <li><strong>alpine 기반 이미지:</strong> 일반 JDK 이미지(약 400MB) 대비 alpine 이미지는 약 150MB로 크기가 작습니다</li>
+      <li><strong>non-root 사용자:</strong> 보안을 위해 appuser를 생성하여 실행합니다</li>
+      <li><strong>UseContainerSupport:</strong> JVM이 컨테이너의 CPU/메모리 제한을 인식하도록 합니다</li>
+      <li><strong>MaxRAMPercentage:</strong> 컨테이너 메모리의 75%를 JVM 힙에 할당합니다</li>
+    </ul>
+
+    <h2>Docker Compose로 로컬 개발 환경 구성</h2>
+
+    <p>데이터베이스, Redis, 모니터링 도구까지 포함한 로컬 개발 환경을 Docker Compose로 구성합니다.</p>
+
+    <pre><code>version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DB_HOST=mssql
+      - DB_PORT=1433
+      - REDIS_HOST=redis
+    depends_on:
+      mssql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$${DB_PASSWORD}" -Q "SELECT 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"</code></pre>
+
+    <p><code>depends_on</code>에 <code>condition: service_healthy</code>를 설정하면, MSSQL이 완전히 기동된 후에 애플리케이션이 시작됩니다. 이를 통해 DB 연결 실패로 인한 애플리케이션 기동 실패를 방지할 수 있습니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>운영 환경 최적화</h2>
+
+    <h3>1. 이미지 레이어 캐싱 최적화</h3>
+
+    <p>Docker는 각 명령어를 레이어로 관리하며, 변경되지 않은 레이어는 캐시에서 재사용합니다. 의존성 다운로드 레이어를 소스 코드 복사보다 먼저 배치하면 빌드 시간을 단축할 수 있습니다.</p>
+
+    <pre><code># 의존성 레이어 (잘 변경되지 않음)
+COPY build.gradle.kts settings.gradle.kts ./
+RUN gradle dependencies --no-daemon
+
+# 소스 코드 레이어 (자주 변경됨)
+COPY src ./src
+RUN gradle bootJar --no-daemon</code></pre>
+
+    <p>이 구조에서는 build.gradle.kts가 변경되지 않는 한, 의존성 다운로드 레이어가 캐시됩니다. 소스 코드만 변경된 경우 빌드 시간이 약 70% 단축됩니다.</p>
+
+    <h3>2. JVM 메모리 설정</h3>
+
+    <p>컨테이너 환경에서는 호스트 전체 메모리가 아닌 컨테이너에 할당된 메모리를 기준으로 JVM 설정을 해야 합니다.</p>
+
+    <pre><code># 컨테이너 메모리 제한: 1GB
+docker run -m 1g myapp:latest
+
+# JVM은 자동으로 750MB (75%)를 힙으로 사용
+# 나머지 250MB는 메타스페이스, 스레드 스택 등에 사용</code></pre>
+
+    <h3>3. 헬스체크 설정</h3>
+
+    <p>Spring Boot Actuator와 Docker 헬스체크를 연동하면, 컨테이너 오케스트레이션 도구에서 자동 복구가 가능합니다.</p>
+
+    <pre><code>HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1</code></pre>
+
+    <h2>배포 자동화 스크립트</h2>
+
+    <p>실제 운영에서 사용하는 무중단 배포 스크립트의 핵심 로직입니다. Blue-Green 배포 패턴을 사용합니다.</p>
+
+    <pre><code>#!/bin/bash
+set -e
+
+IMAGE_TAG="myapp:$(date +%Y%m%d_%H%M%S)"
+CURRENT_COLOR=$(docker ps --filter "name=myapp" --format "{{.Names}}" | grep -o 'blue\|green')
+
+if [ "$CURRENT_COLOR" = "blue" ]; then
+  NEW_COLOR="green"
+  NEW_PORT="8081"
+else
+  NEW_COLOR="blue"
+  NEW_PORT="8080"
+fi
+
+echo "Building new image: $IMAGE_TAG"
+docker build -t "$IMAGE_TAG" .
+
+echo "Starting $NEW_COLOR container on port $NEW_PORT"
+docker run -d --name "myapp-$NEW_COLOR" \
+  -p "$NEW_PORT:8080" \
+  --health-cmd="wget -q --spider http://localhost:8080/actuator/health" \
+  "$IMAGE_TAG"
+
+echo "Waiting for health check..."
+for i in $(seq 1 30); do
+  if docker inspect --format='{{.State.Health.Status}}' "myapp-$NEW_COLOR" | grep -q "healthy"; then
+    echo "New container is healthy!"
+    break
+  fi
+  sleep 2
+done
+
+echo "Switching traffic to $NEW_COLOR"
+# nginx 설정 업데이트 또는 로드밸런서 전환
+
+echo "Stopping old $CURRENT_COLOR container"
+docker stop "myapp-$CURRENT_COLOR" &amp;&amp; docker rm "myapp-$CURRENT_COLOR"
+
+echo "Deployment complete!"</code></pre>
+
+    <h2>실무에서 겪은 트러블슈팅</h2>
+
+    <h3>TimeZone 이슈</h3>
+
+    <p>alpine 기반 이미지에서는 기본 타임존이 UTC입니다. 한국 시간이 필요한 경우 Dockerfile에 타임존 설정을 추가해야 합니다.</p>
+
+    <pre><code>RUN apk add --no-cache tzdata
+ENV TZ=Asia/Seoul</code></pre>
+
+    <h3>파일 인코딩 이슈</h3>
+
+    <p>MSSQL과 연동할 때 한글 데이터가 깨지는 경우가 있었습니다. JDBC URL에 characterEncoding을 명시하고, 컨테이너의 로케일 설정도 함께 변경해야 합니다.</p>
+
+    <pre><code>ENV LANG=ko_KR.UTF-8
+ENV LANGUAGE=ko_KR:ko</code></pre>
+
+    <h3>DNS 해석 지연</h3>
+
+    <p>컨테이너 내부에서 외부 서비스 호출 시 DNS 해석이 느린 경우, JVM의 DNS 캐싱 설정을 조정합니다.</p>
+
+    <pre><code>-Dsun.net.inetaddr.ttl=30
+-Dnetworkaddress.cache.ttl=30</code></pre>
+
+    <h2>마치며</h2>
+
+    <p>Docker를 활용한 Spring Boot 배포는 초기 학습 비용이 있지만, 한번 구축하면 배포 안정성과 효율성이 크게 향상됩니다. 특히 엔터프라이즈 환경에서는 환경 일관성이 보장되어 운영 이슈가 크게 줄어들었습니다.</p>
+
+    <p>다음 글에서는 GitHub Actions와 연동하여 CI/CD 파이프라인을 구축하는 방법을 다루겠습니다.</p>
+
+    <div class="ad-container"></div>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
