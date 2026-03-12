@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Spring AI 프레임워크를 활용하여 Spring Boot 애플리케이션에 LLM을 통합하는 실전 가이드. ChatClient, Function Calling, RAG 구현까지.">
+  <meta name="keywords" content="Spring AI, Spring Boot, LLM, ChatClient, AI 연동, Function Calling">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="Spring AI로 LLM 통합하기: Spring Boot 개발자를 위한 AI 연동 가이드">
+  <meta property="og:description" content="Spring AI 프레임워크로 OpenAI, Anthropic, Ollama 등 다양한 LLM을 Spring Boot에 통합하는 방법">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/spring-ai-integration.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/spring-ai-integration.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+  <title>Spring AI로 LLM 통합하기: Spring Boot 개발자를 위한 AI 연동 가이드 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="post-header">
+    <div class="container">
+      <span class="post-tag">Spring Boot</span>
+      <h1>Spring AI로 LLM 통합하기: Spring Boot 개발자를 위한 AI 연동 가이드</h1>
+      <div class="post-meta">
+        <span>2026.02.25</span>
+        <span>13분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="ad-container"></div>
+
+    <article class="post-content">
+      <h2>Spring AI란 무엇인가?</h2>
+      <p>Spring AI는 Spring 생태계에서 공식적으로 제공하는 AI 통합 프레임워크입니다. 기존에 LLM을 Java 애플리케이션에 연동하려면 각 제공사의 REST API를 직접 호출하거나 서드파티 라이브러리에 의존해야 했습니다. Spring AI는 이러한 복잡성을 추상화하여, Spring 개발자에게 익숙한 방식으로 AI 기능을 통합할 수 있게 해줍니다.</p>
+      <p>Spring Data가 다양한 데이터베이스를 통합 인터페이스로 다루듯이, Spring AI는 OpenAI, Anthropic, Ollama, Azure OpenAI 등 다양한 AI 모델 제공사를 일관된 API로 사용할 수 있게 합니다. 2026년 현재 정식 GA 버전이 릴리스되어 프로덕션 환경에서도 안정적으로 사용할 수 있습니다.</p>
+
+      <div class="info-box">
+        <strong>Spring AI의 핵심 철학:</strong> AI 모델을 변경하더라도 비즈니스 로직 코드는 수정하지 않아도 됩니다. 설정 변경만으로 OpenAI에서 Anthropic으로, 또는 로컬 Ollama로 전환할 수 있습니다.
+      </div>
+
+      <h2>프로젝트 설정</h2>
+      <p>Spring Initializr에서 Spring AI 의존성을 추가하거나, 기존 프로젝트에 수동으로 설정할 수 있습니다. 여기서는 Gradle 기준으로 설명합니다.</p>
+
+      <h3>build.gradle 설정</h3>
+      <pre><code>plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+dependencies {
+    // Spring AI BOM
+    implementation platform('org.springframework.ai:spring-ai-bom:1.0.0')
+
+    // OpenAI 연동
+    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
+
+    // Anthropic 연동 (필요시)
+    // implementation 'org.springframework.ai:spring-ai-anthropic-spring-boot-starter'
+
+    // Ollama 로컬 모델 연동 (필요시)
+    // implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter'
+
+    // 벡터 스토어 (pgvector)
+    implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql'
+}</code></pre>
+
+      <h3>application.yml 설정</h3>
+      <pre><code>spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.7
+          max-tokens: 2000
+    # Anthropic 사용 시
+    # anthropic:
+    #   api-key: ${ANTHROPIC_API_KEY}
+    #   chat:
+    #     options:
+    #       model: claude-sonnet-4-20250514
+    #       max-tokens: 4096</code></pre>
+
+      <h2>ChatClient 기본 사용법</h2>
+      <p>Spring AI의 핵심 컴포넌트는 <code>ChatClient</code>입니다. Spring의 <code>RestClient</code>나 <code>WebClient</code>와 유사한 빌더 패턴으로 설계되어 있어, Spring 개발자라면 직관적으로 사용할 수 있습니다.</p>
+
+      <h3>간단한 채팅 구현</h3>
+      <pre><code>@RestController
+@RequestMapping("/api/chat")
+public class ChatController {
+
+    private final ChatClient chatClient;
+
+    public ChatController(ChatClient.Builder chatClientBuilder) {
+        this.chatClient = chatClientBuilder
+            .defaultSystem("당신은 친절한 기술 상담 전문가입니다. 한국어로 답변하세요.")
+            .build();
+    }
+
+    @PostMapping
+    public ResponseEntity&lt;ChatResponse&gt; chat(@RequestBody ChatRequest request) {
+        String response = chatClient.prompt()
+            .user(request.getMessage())
+            .call()
+            .content();
+
+        return ResponseEntity.ok(new ChatResponse(response));
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux&lt;String&gt; chatStream(@RequestParam String message) {
+        return chatClient.prompt()
+            .user(message)
+            .stream()
+            .content();
+    }
+}</code></pre>
+
+      <h3>ChatModel 직접 사용</h3>
+      <p><code>ChatClient</code>가 고수준 API라면, <code>ChatModel</code>은 저수준 API입니다. 세밀한 제어가 필요한 경우에 사용합니다.</p>
+      <pre><code>@Service
+public class AdvancedChatService {
+
+    private final ChatModel chatModel;
+
+    public AdvancedChatService(ChatModel chatModel) {
+        this.chatModel = chatModel;
+    }
+
+    public String generateWithOptions(String userMessage) {
+        ChatResponse response = chatModel.call(
+            new Prompt(
+                List.of(
+                    new SystemMessage("코드 리뷰 전문가입니다."),
+                    new UserMessage(userMessage)
+                ),
+                OpenAiChatOptions.builder()
+                    .model("gpt-4o")
+                    .temperature(0.3)
+                    .topP(0.9)
+                    .build()
+            )
+        );
+
+        return response.getResult().getOutput().getText();
+    }
+}</code></pre>
+
+      <h2>프롬프트 템플릿 활용</h2>
+      <p>하드코딩된 프롬프트 대신 템플릿을 사용하면 프롬프트를 외부에서 관리하고, 변수를 동적으로 주입할 수 있습니다.</p>
+
+      <pre><code>@Service
+public class CodeReviewService {
+
+    private final ChatClient chatClient;
+
+    @Value("classpath:prompts/code-review.st")
+    private Resource codeReviewPrompt;
+
+    public CodeReviewService(ChatClient.Builder builder) {
+        this.chatClient = builder.build();
+    }
+
+    public String reviewCode(String language, String code) {
+        return chatClient.prompt()
+            .user(u -> u
+                .text(codeReviewPrompt)
+                .param("language", language)
+                .param("code", code)
+            )
+            .call()
+            .content();
+    }
+}</code></pre>
+
+      <p><code>src/main/resources/prompts/code-review.st</code> 파일 내용:</p>
+      <pre><code>다음 {language} 코드를 리뷰해 주세요.
+
+리뷰 기준:
+1. 코드 품질과 가독성
+2. 잠재적 버그
+3. 성능 개선 가능성
+4. 보안 취약점
+
+코드:
+```
+{code}
+```
+
+개선 사항을 구체적인 코드 예시와 함께 한국어로 설명해 주세요.</code></pre>
+
+      <div class="info-box">
+        <strong>템플릿 엔진:</strong> Spring AI는 StringTemplate(ST) 문법을 사용합니다. 중괄호 <code>{변수명}</code>으로 변수를 삽입하며, 조건문이나 반복문도 지원됩니다.
+      </div>
+
+      <h2>Structured Output: JSON 파싱</h2>
+      <p>LLM의 응답을 자유 텍스트가 아닌 구조화된 Java 객체로 받을 수 있습니다. 이를 통해 AI 응답을 후속 비즈니스 로직에서 안정적으로 활용할 수 있습니다.</p>
+
+      <pre><code>// 응답을 매핑할 Record 정의
+public record CodeAnalysis(
+    String summary,
+    List&lt;String&gt; issues,
+    List&lt;Suggestion&gt; suggestions,
+    int qualityScore
+) {}
+
+public record Suggestion(
+    String title,
+    String description,
+    String priority  // HIGH, MEDIUM, LOW
+) {}
+
+@Service
+public class CodeAnalysisService {
+
+    private final ChatClient chatClient;
+
+    public CodeAnalysisService(ChatClient.Builder builder) {
+        this.chatClient = builder.build();
+    }
+
+    public CodeAnalysis analyzeCode(String code) {
+        return chatClient.prompt()
+            .user("다음 코드를 분석하고 품질 점수를 매겨주세요:\n" + code)
+            .call()
+            .entity(CodeAnalysis.class);  // 자동 JSON 파싱
+    }
+
+    // 리스트로 받기
+    public List&lt;CodeAnalysis&gt; analyzeBatch(List&lt;String&gt; codes) {
+        return chatClient.prompt()
+            .user("다음 코드들을 각각 분석해주세요:\n" +
+                  String.join("\n---\n", codes))
+            .call()
+            .entity(new ParameterizedTypeReference&lt;List&lt;CodeAnalysis&gt;&gt;() {});
+    }
+}</code></pre>
+
+      <div class="warning-box">
+        <strong>주의:</strong> Structured Output은 모델에 따라 안정성이 다릅니다. GPT-4o와 Claude는 높은 정확도를 보이지만, 소규모 로컬 모델에서는 JSON 파싱 실패가 발생할 수 있습니다. 반드시 예외 처리를 추가하세요.
+      </div>
+
+      <h2>Function Calling 구현</h2>
+      <p>Function Calling은 LLM이 사전에 정의된 함수를 호출하도록 하여, 외부 시스템과 상호작용하는 기능입니다. 날씨 조회, 데이터베이스 검색, API 호출 등을 AI 대화 흐름 안에서 자연스럽게 처리할 수 있습니다.</p>
+
+      <h3>함수 정의와 등록</h3>
+      <pre><code>@Configuration
+public class AiFunctionConfig {
+
+    @Bean
+    @Description("사용자의 주문 상태를 조회합니다")
+    public Function&lt;OrderStatusRequest, OrderStatusResponse&gt; getOrderStatus(
+            OrderService orderService) {
+        return request -> {
+            Order order = orderService.findByOrderNumber(request.orderNumber());
+            return new OrderStatusResponse(
+                order.getOrderNumber(),
+                order.getStatus().getDisplayName(),
+                order.getEstimatedDeliveryDate()
+            );
+        };
+    }
+
+    @Bean
+    @Description("상품을 검색합니다. 카테고리와 가격 범위로 필터링 가능합니다")
+    public Function&lt;ProductSearchRequest, List&lt;ProductSearchResponse&gt;&gt; searchProducts(
+            ProductService productService) {
+        return request -> productService.search(
+            request.keyword(),
+            request.category(),
+            request.minPrice(),
+            request.maxPrice()
+        ).stream()
+         .map(p -> new ProductSearchResponse(p.getName(), p.getPrice(), p.getImageUrl()))
+         .toList();
+    }
+}
+
+// 요청/응답 Record
+public record OrderStatusRequest(String orderNumber) {}
+public record OrderStatusResponse(String orderNumber, String status, LocalDate estimatedDelivery) {}
+public record ProductSearchRequest(String keyword, String category, Integer minPrice, Integer maxPrice) {}</code></pre>
+
+      <h3>Function Calling 호출</h3>
+      <pre><code>@RestController
+@RequestMapping("/api/assistant")
+public class ShoppingAssistantController {
+
+    private final ChatClient chatClient;
+
+    public ShoppingAssistantController(ChatClient.Builder builder) {
+        this.chatClient = builder
+            .defaultSystem("당신은 온라인 쇼핑몰 고객 지원 어시스턴트입니다.")
+            .defaultFunctions("getOrderStatus", "searchProducts")
+            .build();
+    }
+
+    @PostMapping
+    public String assist(@RequestBody String userMessage) {
+        return chatClient.prompt()
+            .user(userMessage)
+            .call()
+            .content();
+        // "주문번호 ORD-2026-001 상태 알려줘"라고 하면
+        // 자동으로 getOrderStatus 함수가 호출되고 결과를 응답에 반영합니다
+    }
+}</code></pre>
+
+      <h2>벡터 스토어 연동 (pgvector)</h2>
+      <p>벡터 스토어는 텍스트를 임베딩 벡터로 변환하여 저장하고, 의미적으로 유사한 문서를 검색하는 데 사용됩니다. Spring AI는 pgvector, Chroma, Milvus, Pinecone 등 다양한 벡터 스토어를 지원합니다.</p>
+
+      <h3>pgvector 설정</h3>
+      <pre><code># application.yml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vectordb
+    username: postgres
+    password: secret
+  ai:
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536</code></pre>
+
+      <h3>문서 저장과 검색</h3>
+      <pre><code>@Service
+public class DocumentService {
+
+    private final VectorStore vectorStore;
+
+    public DocumentService(VectorStore vectorStore) {
+        this.vectorStore = vectorStore;
+    }
+
+    public void storeDocuments(List&lt;String&gt; texts) {
+        List&lt;Document&gt; documents = texts.stream()
+            .map(text -> new Document(text, Map.of("source", "manual")))
+            .toList();
+        vectorStore.add(documents);
+    }
+
+    public List&lt;Document&gt; searchSimilar(String query, int topK) {
+        return vectorStore.similaritySearch(
+            SearchRequest.builder()
+                .query(query)
+                .topK(topK)
+                .similarityThreshold(0.7)
+                .build()
+        );
+    }
+}</code></pre>
+
+      <h2>RAG (Retrieval-Augmented Generation) 구현</h2>
+      <p>RAG는 벡터 스토어에서 관련 문서를 검색한 뒤, 그 문서를 컨텍스트로 포함하여 LLM에 질문하는 패턴입니다. 이를 통해 LLM이 알지 못하는 사내 문서, 제품 매뉴얼, FAQ 등을 기반으로 정확한 답변을 생성할 수 있습니다.</p>
+
+      <pre><code>@Service
+public class RagService {
+
+    private final ChatClient chatClient;
+    private final VectorStore vectorStore;
+
+    public RagService(ChatClient.Builder builder, VectorStore vectorStore) {
+        this.vectorStore = vectorStore;
+        this.chatClient = builder
+            .defaultSystem("제공된 컨텍스트를 기반으로만 답변하세요. "
+                         + "컨텍스트에 없는 정보는 '해당 정보를 찾을 수 없습니다'라고 답하세요.")
+            .defaultAdvisors(
+                new QuestionAnswerAdvisor(vectorStore,
+                    SearchRequest.builder()
+                        .topK(5)
+                        .similarityThreshold(0.65)
+                        .build())
+            )
+            .build();
+    }
+
+    public String askWithContext(String question) {
+        return chatClient.prompt()
+            .user(question)
+            .call()
+            .content();
+    }
+}
+
+// 문서 로딩: PDF, 마크다운 등을 벡터 스토어에 적재
+@Component
+public class DocumentLoader {
+
+    private final VectorStore vectorStore;
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void loadDocuments() {
+        // PDF 문서 로딩
+        var pdfReader = new PagePdfDocumentReader("classpath:docs/manual.pdf");
+        var textSplitter = new TokenTextSplitter(800, 200, 5, 1000, true);
+        List&lt;Document&gt; chunks = textSplitter.apply(pdfReader.get());
+        vectorStore.add(chunks);
+    }
+}</code></pre>
+
+      <div class="info-box">
+        <strong>RAG 최적화 팁:</strong> 청크 크기(800~1200 토큰), 오버랩(100~200 토큰), 유사도 임계값(0.6~0.75)은 문서 특성에 따라 실험적으로 조정해야 합니다. 검색 품질이 RAG 전체 성능의 70% 이상을 좌우합니다.
+      </div>
+
+      <h2>에러 핸들링과 재시도 전략</h2>
+      <p>AI API 호출은 네트워크 문제, Rate Limit, 타임아웃 등 다양한 실패 요인이 있습니다. 안정적인 운영을 위해 체계적인 에러 핸들링이 필수입니다.</p>
+
+      <pre><code>@Configuration
+public class AiRetryConfig {
+
+    @Bean
+    public RetryTemplate aiRetryTemplate() {
+        return RetryTemplate.builder()
+            .maxAttempts(3)
+            .exponentialBackoff(1000, 2.0, 10000)
+            .retryOn(List.of(
+                ResourceAccessException.class,    // 네트워크 오류
+                HttpServerErrorException.class     // 5xx 에러
+            ))
+            .build();
+    }
+}
+
+@Service
+public class ResilientChatService {
+
+    private final ChatClient chatClient;
+    private final RetryTemplate retryTemplate;
+
+    public String chatWithRetry(String message) {
+        return retryTemplate.execute(context -> {
+            if (context.getRetryCount() > 0) {
+                log.warn("AI 호출 재시도 중: 시도 {}회", context.getRetryCount() + 1);
+            }
+            return chatClient.prompt()
+                .user(message)
+                .call()
+                .content();
+        }, context -> {
+            log.error("AI 호출 최종 실패", context.getLastThrowable());
+            return "죄송합니다. 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        });
+    }
+}</code></pre>
+
+      <div class="warning-box">
+        <strong>Rate Limit 대응:</strong> OpenAI와 Anthropic 모두 분당 요청 수(RPM)와 분당 토큰 수(TPM) 제한이 있습니다. 프로덕션에서는 요청 큐와 Rate Limiter(Bucket4j 등)를 함께 적용하는 것을 권장합니다.
+      </div>
+
+      <h2>실무 아키텍처 예시</h2>
+      <p>실제 프로덕션 환경에서 Spring AI를 활용할 때 권장하는 아키텍처 구성입니다.</p>
+
+      <pre><code>┌─────────────────────────────────────────────────┐
+│                    클라이언트                      │
+└─────────────┬───────────────────────────────────┘
+              │ REST / WebSocket
+┌─────────────▼───────────────────────────────────┐
+│  API Gateway (Spring Cloud Gateway)              │
+│  - Rate Limiting                                 │
+│  - 인증/인가                                     │
+└─────────────┬───────────────────────────────────┘
+              │
+┌─────────────▼───────────────────────────────────┐
+│  AI Service (Spring Boot + Spring AI)            │
+│  ┌──────────┐ ┌───────────┐ ┌──────────────┐   │
+│  │ChatClient│ │VectorStore│ │FunctionCalling│   │
+│  └────┬─────┘ └─────┬─────┘ └──────┬───────┘   │
+│       │             │              │             │
+│  ┌────▼─────────────▼──────────────▼───────┐    │
+│  │         Advisor Chain (미들웨어)          │    │
+│  │  - 로깅 / 감사 추적                      │    │
+│  │  - 컨텐츠 필터링                          │    │
+│  │  - 토큰 사용량 추적                       │    │
+│  └──────────────────────────────────────────┘    │
+└─────────────┬───────────────────────────────────┘
+              │
+    ┌─────────┼──────────┐
+    ▼         ▼          ▼
+┌───────┐ ┌──────┐ ┌─────────┐
+│OpenAI │ │Claude│ │ Ollama  │
+│  API  │ │ API  │ │(로컬LLM)│
+└───────┘ └──────┘ └─────────┘</code></pre>
+
+      <h3>모델 전환 전략</h3>
+      <pre><code>@Service
+public class MultiModelService {
+
+    private final ChatClient primaryClient;   // OpenAI
+    private final ChatClient fallbackClient;  // Ollama (로컬)
+
+    public MultiModelService(
+            @Qualifier("openAiChatModel") ChatModel primaryModel,
+            @Qualifier("ollamaChatModel") ChatModel fallbackModel) {
+        this.primaryClient = ChatClient.builder(primaryModel).build();
+        this.fallbackClient = ChatClient.builder(fallbackModel).build();
+    }
+
+    public String chat(String message) {
+        try {
+            return primaryClient.prompt().user(message).call().content();
+        } catch (Exception e) {
+            log.warn("Primary 모델 실패, Fallback으로 전환: {}", e.getMessage());
+            return fallbackClient.prompt().user(message).call().content();
+        }
+    }
+}</code></pre>
+
+      <h2>마무리</h2>
+      <p>Spring AI는 Java/Spring 개발자가 AI 기능을 통합하는 진입 장벽을 크게 낮춰줍니다. ChatClient의 직관적인 API, Structured Output을 통한 타입 안전한 응답 처리, Function Calling을 통한 외부 시스템 연동, 그리고 벡터 스토어 기반 RAG 구현까지, 실무에서 필요한 대부분의 AI 통합 패턴을 프레임워크 수준에서 지원합니다.</p>
+      <p>가장 중요한 것은 추상화 덕분에 모델 제공사를 쉽게 전환할 수 있다는 점입니다. OpenAI에서 시작하되, 비용이나 성능 요구사항에 따라 Anthropic이나 로컬 Ollama로 유연하게 전환하는 전략을 세울 수 있습니다. 점진적으로 도입하면서 프롬프트 엔지니어링과 RAG 품질을 개선해 나가는 것이 성공적인 AI 통합의 핵심입니다.</p>
+
+      <div class="post-nav">
+        <a href="../index.html">&larr; 목록으로</a>
+        <a href="webassembly-frontend-2026.html">다음 글 &rarr;</a>
+      </div>
+    </article>
+
+    <div class="ad-container"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <div class="footer-links" style="margin-top: 0.5rem;">
+          <a href="https://jaeseong90.github.io/jaeseong90Folio" target="_blank">포트폴리오</a>
+          <a href="https://jaeseong90.github.io/homepage-game" target="_blank">게임</a>
+          <a href="https://jaeseong90.github.io/Toolry" target="_blank">Toolry</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  <script src="../js/main.js"></script>
+</body>
+</html>
