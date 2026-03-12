@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="2026년 에이전틱 AI 개발의 핵심 개념부터 LangChain/LangGraph 활용, 멀티 에이전트 시스템 설계, Tool Use 패턴, RAG 연동까지 실전 구현 가이드.">
+  <meta name="keywords" content="AI 에이전트, Agentic AI, LangChain, LangGraph, Tool Use, 멀티 에이전트">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="AI 에이전트 개발 실전: 2026년 에이전틱 AI 구현 가이드">
+  <meta property="og:description" content="에이전틱 AI의 핵심 개념부터 LangChain/LangGraph 활용, 멀티 에이전트 시스템 설계까지 실전 가이드">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/ai-agent-development-2026.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/ai-agent-development-2026.html">
+
+  <title>AI 에이전트 개발 실전: 2026년 에이전틱 AI 구현 가이드 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">AI</span>
+      <h1>AI 에이전트 개발 실전: 2026년 에이전틱 AI 구현 가이드</h1>
+      <div class="post-meta">
+        <span>2026.03.10</span>
+        <span>15분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </section>
+
+  <article class="post-content">
+    <p>2026년은 AI 에이전트가 본격적으로 실무에 도입되는 해입니다. 단순한 질의응답 챗봇을 넘어, 스스로 판단하고 도구를 활용하며 복잡한 작업을 수행하는 에이전틱 AI(Agentic AI)가 소프트웨어 개발의 핵심 패러다임으로 자리잡고 있습니다. 이 글에서는 AI 에이전트의 핵심 개념부터 LangChain, LangGraph를 활용한 실전 구현까지 상세하게 다룹니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>에이전틱 AI란 무엇인가?</h2>
+
+    <p>에이전틱 AI(Agentic AI)는 주어진 목표를 달성하기 위해 자율적으로 계획을 세우고, 필요한 도구를 선택하여 실행하며, 결과를 평가하여 다음 행동을 결정하는 AI 시스템입니다. 기존의 챗봇이 한 번의 질문에 한 번의 응답을 하는 반응형(Reactive) 시스템이라면, AI 에이전트는 목표 지향적(Goal-oriented)으로 여러 단계를 자율적으로 수행합니다.</p>
+
+    <h3>기존 챗봇과 AI 에이전트의 차이</h3>
+
+    <pre><code>┌─────────────┬──────────────────┬──────────────────────┐
+│   구분       │   기존 챗봇       │   AI 에이전트          │
+├─────────────┼──────────────────┼──────────────────────┤
+│ 동작 방식    │ 입력 → 출력       │ 목표 → 계획 → 실행     │
+│ 도구 사용    │ 없음 또는 제한적   │ 다양한 도구 자율 선택   │
+│ 상태 관리    │ 단일 턴           │ 멀티 턴 상태 유지       │
+│ 오류 처리    │ 에러 반환          │ 자동 재시도 및 대안 탐색 │
+│ 복잡한 작업  │ 불가              │ 작업 분해 후 순차 실행   │
+│ 자율성       │ 낮음              │ 높음                   │
+└─────────────┴──────────────────┴──────────────────────┘</code></pre>
+
+    <div class="info-box">
+      <strong>핵심 개념:</strong> AI 에이전트의 핵심은 "루프"입니다. 관찰(Observe) → 생각(Think) → 행동(Act) → 관찰의 순환을 반복하면서 목표를 달성합니다. 이것을 ReAct(Reasoning + Acting) 패턴이라고 부릅니다.
+    </div>
+
+    <h2>AI 에이전트의 핵심 구성 요소</h2>
+
+    <h3>1. LLM (두뇌)</h3>
+
+    <p>에이전트의 추론 엔진으로, 현재 상황을 분석하고 다음 행동을 결정합니다. Claude, GPT-4 등 고성능 언어 모델이 사용됩니다.</p>
+
+    <h3>2. Tools (도구)</h3>
+
+    <p>에이전트가 외부 세계와 상호작용하는 수단입니다. API 호출, 데이터베이스 쿼리, 파일 조작, 웹 검색 등 다양한 도구를 정의할 수 있습니다.</p>
+
+    <h3>3. Memory (기억)</h3>
+
+    <p>에이전트가 이전 대화와 작업 결과를 기억하는 메커니즘입니다. 단기 기억(현재 대화 컨텍스트)과 장기 기억(벡터 DB에 저장된 지식)으로 나뉩니다.</p>
+
+    <h3>4. Planning (계획)</h3>
+
+    <p>복잡한 작업을 하위 작업으로 분해하고 실행 순서를 결정하는 능력입니다. Chain of Thought, Task Decomposition 등의 기법이 활용됩니다.</p>
+
+    <h2>LangChain으로 기본 에이전트 구현하기</h2>
+
+    <p>LangChain은 LLM 기반 애플리케이션을 개발하기 위한 가장 널리 사용되는 프레임워크입니다. 에이전트 구현에 필요한 핵심 추상화를 제공합니다.</p>
+
+    <h3>프로젝트 설정</h3>
+
+    <pre><code># 필수 패키지 설치
+pip install langchain langchain-anthropic langchain-community
+pip install tavily-python  # 웹 검색 도구</code></pre>
+
+    <h3>Tool Use 패턴 구현</h3>
+
+    <pre><code>from langchain_anthropic import ChatAnthropic
+from langchain_core.tools import tool
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.prompts import ChatPromptTemplate
+import httpx
+import json
+
+# 도구 정의
+@tool
+def search_web(query: str) -&gt; str:
+    """웹에서 최신 정보를 검색합니다. 실시간 데이터나 최근 뉴스가 필요할 때 사용합니다."""
+    from tavily import TavilyClient
+    client = TavilyClient(api_key="YOUR_TAVILY_KEY")
+    results = client.search(query, max_results=3)
+    return json.dumps([{
+        "title": r["title"],
+        "content": r["content"][:200]
+    } for r in results["results"]], ensure_ascii=False)
+
+@tool
+def calculate(expression: str) -&gt; str:
+    """수학 계산을 수행합니다. Python 수식을 입력받아 결과를 반환합니다."""
+    try:
+        # 안전한 수식 평가
+        allowed_names = {"__builtins__": {}}
+        result = eval(expression, allowed_names)
+        return str(result)
+    except Exception as e:
+        return f"계산 오류: {str(e)}"
+
+@tool
+def get_current_date() -&gt; str:
+    """현재 날짜와 시간을 반환합니다."""
+    from datetime import datetime
+    return datetime.now().strftime("%Y년 %m월 %d일 %H시 %M분")
+
+# LLM 초기화
+llm = ChatAnthropic(
+    model="claude-sonnet-4-20250514",
+    temperature=0,
+    max_tokens=4096
+)
+
+# 프롬프트 템플릿
+prompt = ChatPromptTemplate.from_messages([
+    ("system", """당신은 유능한 AI 비서입니다. 사용자의 요청을 달성하기 위해
+    사용 가능한 도구를 적극적으로 활용하세요.
+    복잡한 질문은 단계별로 나누어 처리하세요."""),
+    ("human", "{input}"),
+    ("placeholder", "{agent_scratchpad}")
+])
+
+# 도구 목록
+tools = [search_web, calculate, get_current_date]
+
+# 에이전트 생성
+agent = create_tool_calling_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    verbose=True,  # 실행 과정 출력
+    max_iterations=10,
+    handle_parsing_errors=True
+)
+
+# 실행
+response = agent_executor.invoke({
+    "input": "오늘 서울 날씨를 검색하고, 현재 기온이 섭씨일 때 화씨로 변환해줘"
+})
+print(response["output"])</code></pre>
+
+    <div class="ad-container"></div>
+
+    <h2>LangGraph로 복잡한 에이전트 워크플로우 구현</h2>
+
+    <p>LangGraph는 LangChain 팀이 개발한 에이전트 오케스트레이션 프레임워크입니다. 상태 기반 그래프(Stateful Graph)로 복잡한 에이전트 워크플로우를 설계하고 제어할 수 있습니다.</p>
+
+    <h3>LangGraph의 핵심 개념</h3>
+
+    <ul>
+      <li><strong>State:</strong> 그래프 전체에서 공유되는 상태 객체. 에이전트의 현재 상태를 추적합니다</li>
+      <li><strong>Node:</strong> 그래프의 각 노드는 하나의 처리 단계를 담당합니다 (LLM 호출, 도구 실행 등)</li>
+      <li><strong>Edge:</strong> 노드 간의 전환 조건을 정의합니다. 조건부 분기가 가능합니다</li>
+      <li><strong>Checkpoint:</strong> 그래프 실행 중간 상태를 저장하여 복구하거나 되돌릴 수 있습니다</li>
+    </ul>
+
+    <h3>조건부 분기가 있는 에이전트</h3>
+
+    <pre><code>from langgraph.graph import StateGraph, END
+from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+from typing import TypedDict, Annotated, Sequence
+import operator
+
+# 상태 정의
+class AgentState(TypedDict):
+    messages: Annotated[Sequence, operator.add]
+    current_step: str
+    retry_count: int
+
+# LLM 초기화
+llm = ChatAnthropic(model="claude-sonnet-4-20250514").bind_tools(tools)
+
+# 노드 정의
+def call_model(state: AgentState) -&gt; dict:
+    """LLM을 호출하여 다음 행동을 결정합니다."""
+    messages = state["messages"]
+    response = llm.invoke(messages)
+    return {"messages": [response], "current_step": "model"}
+
+def call_tools(state: AgentState) -&gt; dict:
+    """LLM이 요청한 도구를 실행합니다."""
+    last_message = state["messages"][-1]
+    results = []
+
+    for tool_call in last_message.tool_calls:
+        tool_name = tool_call["name"]
+        tool_args = tool_call["args"]
+
+        # 도구 찾기 및 실행
+        selected_tool = next(t for t in tools if t.name == tool_name)
+        try:
+            result = selected_tool.invoke(tool_args)
+        except Exception as e:
+            result = f"도구 실행 오류: {str(e)}"
+
+        results.append(
+            ToolMessage(content=str(result), tool_call_id=tool_call["id"])
+        )
+
+    return {"messages": results, "current_step": "tools"}
+
+def should_continue(state: AgentState) -&gt; str:
+    """도구 호출이 필요한지 판단하여 분기합니다."""
+    last_message = state["messages"][-1]
+
+    if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+        return "tools"
+    return "end"
+
+# 그래프 구성
+workflow = StateGraph(AgentState)
+
+# 노드 추가
+workflow.add_node("agent", call_model)
+workflow.add_node("tools", call_tools)
+
+# 진입점 설정
+workflow.set_entry_point("agent")
+
+# 조건부 엣지: agent 노드 이후 도구 호출 여부에 따라 분기
+workflow.add_conditional_edges(
+    "agent",
+    should_continue,
+    {
+        "tools": "tools",
+        "end": END
+    }
+)
+
+# 도구 실행 후 다시 agent로 돌아감
+workflow.add_edge("tools", "agent")
+
+# 그래프 컴파일
+app = workflow.compile()
+
+# 실행
+result = app.invoke({
+    "messages": [HumanMessage(content="2026년 AI 트렌드를 검색하고 요약해줘")],
+    "current_step": "start",
+    "retry_count": 0
+})</code></pre>
+
+    <h2>멀티 에이전트 시스템 설계</h2>
+
+    <p>복잡한 작업은 하나의 에이전트보다 여러 전문 에이전트가 협업하는 것이 효과적입니다. 멀티 에이전트 시스템에서는 각 에이전트가 특정 역할에 특화되어 있고, 오케스트레이터가 작업을 조율합니다.</p>
+
+    <h3>Supervisor 패턴</h3>
+
+    <pre><code>from langgraph.graph import StateGraph, END
+from langchain_anthropic import ChatAnthropic
+
+# 전문 에이전트 정의
+class SupervisorState(TypedDict):
+    messages: Annotated[Sequence, operator.add]
+    next_agent: str
+    task_complete: bool
+
+def supervisor_node(state: SupervisorState) -&gt; dict:
+    """작업을 분석하고 적절한 에이전트에게 위임합니다."""
+    supervisor_llm = ChatAnthropic(model="claude-sonnet-4-20250514")
+    response = supervisor_llm.invoke([
+        {"role": "system", "content": """당신은 팀 매니저입니다.
+        사용자의 요청을 분석하여 적절한 전문가에게 위임하세요.
+        - researcher: 정보 검색 및 조사가 필요한 경우
+        - coder: 코드 작성이나 기술 분석이 필요한 경우
+        - writer: 문서 작성이나 요약이 필요한 경우
+        - FINISH: 모든 작업이 완료된 경우
+        다음에 실행할 에이전트 이름만 반환하세요."""},
+        *state["messages"]
+    ])
+
+    next_agent = response.content.strip().lower()
+    return {"next_agent": next_agent}
+
+def researcher_node(state: SupervisorState) -&gt; dict:
+    """정보를 검색하고 조사합니다."""
+    researcher = ChatAnthropic(model="claude-sonnet-4-20250514").bind_tools([search_web])
+    response = researcher.invoke(state["messages"])
+    return {"messages": [AIMessage(content=f"[리서처] {response.content}")]}
+
+def coder_node(state: SupervisorState) -&gt; dict:
+    """코드를 작성하고 기술 분석을 수행합니다."""
+    coder = ChatAnthropic(model="claude-sonnet-4-20250514")
+    response = coder.invoke([
+        {"role": "system", "content": "당신은 시니어 개발자입니다. 코드 작성과 기술 분석을 담당합니다."},
+        *state["messages"]
+    ])
+    return {"messages": [AIMessage(content=f"[코더] {response.content}")]}
+
+def writer_node(state: SupervisorState) -&gt; dict:
+    """문서를 작성하고 내용을 요약합니다."""
+    writer = ChatAnthropic(model="claude-sonnet-4-20250514")
+    response = writer.invoke([
+        {"role": "system", "content": "당신은 전문 기술 작가입니다. 명확하고 구조화된 문서를 작성합니다."},
+        *state["messages"]
+    ])
+    return {"messages": [AIMessage(content=f"[작가] {response.content}")]}
+
+def route_to_agent(state: SupervisorState) -&gt; str:
+    """supervisor의 결정에 따라 적절한 에이전트로 라우팅합니다."""
+    next_agent = state.get("next_agent", "finish")
+    if next_agent == "finish":
+        return "end"
+    return next_agent
+
+# 멀티 에이전트 그래프 구성
+multi_agent = StateGraph(SupervisorState)
+multi_agent.add_node("supervisor", supervisor_node)
+multi_agent.add_node("researcher", researcher_node)
+multi_agent.add_node("coder", coder_node)
+multi_agent.add_node("writer", writer_node)
+
+multi_agent.set_entry_point("supervisor")
+
+multi_agent.add_conditional_edges(
+    "supervisor",
+    route_to_agent,
+    {
+        "researcher": "researcher",
+        "coder": "coder",
+        "writer": "writer",
+        "end": END
+    }
+)
+
+# 각 에이전트 완료 후 supervisor로 복귀
+for agent in ["researcher", "coder", "writer"]:
+    multi_agent.add_edge(agent, "supervisor")
+
+graph = multi_agent.compile()</code></pre>
+
+    <div class="info-box">
+      <strong>설계 팁:</strong> 멀티 에이전트 시스템에서 각 에이전트는 단일 책임 원칙을 따라야 합니다. 하나의 에이전트에 너무 많은 역할을 부여하면 성능이 저하됩니다. 각 에이전트에게 특화된 시스템 프롬프트와 도구 세트를 부여하세요.
+    </div>
+
+    <h2>RAG 연동 에이전트</h2>
+
+    <p>RAG(Retrieval-Augmented Generation)를 에이전트에 통합하면, 자체 지식 베이스를 기반으로 더 정확한 응답을 생성할 수 있습니다.</p>
+
+    <pre><code>from langchain_community.vectorstores import Chroma
+from langchain_anthropic import ChatAnthropic
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import HuggingFaceEmbeddings
+
+# 벡터 스토어 설정
+embeddings = HuggingFaceEmbeddings(
+    model_name="intfloat/multilingual-e5-large"
+)
+
+vectorstore = Chroma(
+    collection_name="company_docs",
+    embedding_function=embeddings,
+    persist_directory="./chroma_db"
+)
+
+# RAG 도구 정의
+@tool
+def search_internal_docs(query: str) -&gt; str:
+    """사내 문서에서 관련 정보를 검색합니다. 회사 정책, 기술 문서, 업무 매뉴얼 등을 검색할 때 사용합니다."""
+    results = vectorstore.similarity_search(query, k=3)
+    formatted = []
+    for i, doc in enumerate(results, 1):
+        source = doc.metadata.get("source", "알 수 없음")
+        formatted.append(f"[문서 {i}] 출처: {source}\n{doc.page_content[:300]}")
+    return "\n\n".join(formatted)
+
+# 문서 인덱싱 함수
+def index_documents(file_paths: list[str]):
+    """문서를 벡터 스토어에 인덱싱합니다."""
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=200,
+        separators=["\n\n", "\n", ".", " "]
+    )
+
+    for path in file_paths:
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+
+        chunks = splitter.split_text(text)
+        documents = [
+            {"page_content": chunk, "metadata": {"source": path}}
+            for chunk in chunks
+        ]
+        vectorstore.add_texts(
+            texts=[d["page_content"] for d in documents],
+            metadatas=[d["metadata"] for d in documents]
+        )</code></pre>
+
+    <div class="ad-container"></div>
+
+    <h2>실무 프로젝트 구조</h2>
+
+    <p>실제 프로덕션 환경에서 AI 에이전트를 운영하기 위한 프로젝트 구조입니다.</p>
+
+    <pre><code>ai-agent-project/
+├── agents/
+│   ├── __init__.py
+│   ├── base.py           # 기본 에이전트 클래스
+│   ├── researcher.py     # 리서치 에이전트
+│   ├── coder.py          # 코딩 에이전트
+│   └── writer.py         # 문서 작성 에이전트
+├── tools/
+│   ├── __init__.py
+│   ├── web_search.py     # 웹 검색 도구
+│   ├── database.py       # DB 쿼리 도구
+│   ├── file_manager.py   # 파일 관리 도구
+│   └── api_client.py     # 외부 API 호출 도구
+├── graphs/
+│   ├── __init__.py
+│   ├── single_agent.py   # 단일 에이전트 그래프
+│   └── multi_agent.py    # 멀티 에이전트 그래프
+├── memory/
+│   ├── __init__.py
+│   ├── short_term.py     # 단기 기억 (대화 기록)
+│   └── long_term.py      # 장기 기억 (벡터 DB)
+├── config/
+│   ├── settings.py       # 환경 설정
+│   └── prompts.py        # 시스템 프롬프트 관리
+├── tests/
+│   ├── test_agents.py
+│   ├── test_tools.py
+│   └── test_graphs.py
+├── main.py
+├── requirements.txt
+└── .env</code></pre>
+
+    <h2>에이전트 테스트 전략</h2>
+
+    <p>AI 에이전트는 비결정적(Non-deterministic) 특성이 있어 전통적인 단위 테스트만으로는 충분하지 않습니다. 다층적 테스트 전략이 필요합니다.</p>
+
+    <h3>도구 단위 테스트</h3>
+
+    <pre><code>import pytest
+from tools.web_search import search_web
+from tools.database import execute_query
+from unittest.mock import patch, AsyncMock
+
+class TestTools:
+    """도구의 입출력을 독립적으로 테스트합니다."""
+
+    def test_search_web_returns_results(self):
+        """웹 검색이 결과를 정상적으로 반환하는지 확인"""
+        result = search_web.invoke({"query": "Python 최신 버전"})
+        parsed = json.loads(result)
+        assert len(parsed) &gt; 0
+        assert "title" in parsed[0]
+
+    def test_search_web_handles_empty_query(self):
+        """빈 쿼리에 대한 에러 처리 확인"""
+        with pytest.raises(ValueError):
+            search_web.invoke({"query": ""})
+
+    @patch("tools.database.get_connection")
+    def test_execute_query_readonly(self, mock_conn):
+        """SELECT 외의 쿼리가 차단되는지 확인"""
+        result = execute_query.invoke({"query": "DELETE FROM users"})
+        assert "오류" in result or "error" in result.lower()</code></pre>
+
+    <h3>에이전트 통합 테스트</h3>
+
+    <pre><code>class TestAgentIntegration:
+    """에이전트의 도구 선택과 워크플로우를 테스트합니다."""
+
+    def test_agent_selects_correct_tool(self):
+        """에이전트가 질문에 적합한 도구를 선택하는지 확인"""
+        result = agent_executor.invoke({
+            "input": "현재 날짜가 뭐야?"
+        })
+        # 에이전트가 get_current_date 도구를 사용했는지 확인
+        assert "2026" in result["output"]
+
+    def test_agent_handles_tool_failure(self):
+        """도구 실행 실패 시 에이전트가 적절히 대응하는지 확인"""
+        with patch("tools.web_search.search_web") as mock_search:
+            mock_search.side_effect = Exception("API 호출 실패")
+            result = agent_executor.invoke({
+                "input": "최신 뉴스를 검색해줘"
+            })
+            # 에러가 발생해도 응답은 생성되어야 함
+            assert result["output"] is not None</code></pre>
+
+    <div class="warning-box">
+      <strong>주의사항:</strong> AI 에이전트 테스트에서는 LLM 응답의 비결정성을 고려해야 합니다. 정확한 출력값 비교 대신, 응답에 포함되어야 할 핵심 요소가 있는지, 올바른 도구가 선택되었는지, 에러 상황에서 안전하게 처리되는지를 검증하세요.
+    </div>
+
+    <h2>프로덕션 운영 고려사항</h2>
+
+    <h3>비용 관리</h3>
+
+    <ul>
+      <li><strong>토큰 사용량 모니터링:</strong> 에이전트는 여러 번의 LLM 호출을 수행하므로, 호출당 토큰 사용량을 추적해야 합니다</li>
+      <li><strong>최대 반복 횟수 제한:</strong> <code>max_iterations</code>를 설정하여 무한 루프를 방지하세요</li>
+      <li><strong>캐싱:</strong> 동일한 도구 호출 결과를 캐싱하여 불필요한 API 호출을 줄이세요</li>
+      <li><strong>모델 선택:</strong> 간단한 라우팅은 경량 모델, 복잡한 추론은 고성능 모델을 사용하세요</li>
+    </ul>
+
+    <h3>관측 가능성(Observability)</h3>
+
+    <pre><code># LangSmith를 활용한 에이전트 트레이싱
+import os
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = "your-langsmith-key"
+os.environ["LANGCHAIN_PROJECT"] = "ai-agent-prod"
+
+# 각 에이전트 실행의 전체 트레이스를 LangSmith에서 확인 가능:
+# - LLM 호출 입출력
+# - 도구 선택 및 실행 결과
+# - 토큰 사용량 및 지연 시간
+# - 에러 발생 지점</code></pre>
+
+    <h2>마치며</h2>
+
+    <p>AI 에이전트 개발은 단순히 LLM API를 호출하는 것을 넘어, 시스템 설계, 워크플로우 오케스트레이션, 안전성, 테스트, 운영까지 포함하는 종합적인 엔지니어링 영역입니다.</p>
+
+    <p>2026년 현재, LangChain과 LangGraph 생태계가 빠르게 성숙하면서 에이전트 개발의 진입 장벽이 낮아지고 있습니다. 하지만 프로덕션 수준의 에이전트를 구축하려면 안정성, 비용 효율성, 보안을 충분히 고려해야 합니다.</p>
+
+    <p>다음 글에서는 MCP(Model Context Protocol)를 활용하여 에이전트의 도구 연동을 표준화하는 방법을 다루겠습니다.</p>
+
+    <div class="ad-container"></div>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

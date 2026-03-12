@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="바이브 코딩(Vibe Coding)의 개념부터 Claude Code, Cursor, GitHub Copilot 비교, 효과적인 프롬프트 작성법, 실전 프로젝트 적용까지 AI와 함께하는 개발의 미래를 알아봅니다.">
+  <meta name="keywords" content="바이브 코딩, Vibe Coding, AI 코딩, Claude Code, Cursor, GitHub Copilot">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="바이브 코딩(Vibe Coding) 실전 가이드: AI와 함께하는 개발의 미래">
+  <meta property="og:description" content="바이브 코딩의 개념부터 주요 AI 코딩 도구 비교, 효과적인 프롬프트 작성법, 실전 적용까지 완벽 가이드">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/vibe-coding-guide.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/vibe-coding-guide.html">
+
+  <title>바이브 코딩(Vibe Coding) 실전 가이드: AI와 함께하는 개발의 미래 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">AI</span>
+      <h1>바이브 코딩(Vibe Coding) 실전 가이드: AI와 함께하는 개발의 미래</h1>
+      <div class="post-meta">
+        <span>2026.03.08</span>
+        <span>12분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </section>
+
+  <article class="post-content">
+    <p>코드를 한 줄도 직접 작성하지 않고 자연어만으로 소프트웨어를 만드는 시대가 열렸습니다. Andrej Karpathy가 명명한 "바이브 코딩(Vibe Coding)"은 2026년 개발 문화를 대표하는 키워드가 되었습니다. 이 글에서는 바이브 코딩의 개념부터 실전 활용법, 주요 도구 비교, 그리고 개발자 역할의 변화까지 깊이 있게 다룹니다.</p>
+
+    <div class="ad-container"></div>
+
+    <h2>바이브 코딩이란?</h2>
+
+    <p>바이브 코딩은 AI에게 원하는 결과를 자연어로 설명하고, AI가 코드를 생성하며, 개발자는 그 결과를 검증하고 방향을 조율하는 개발 방식입니다. 전 Tesla AI 리더이자 OpenAI 공동 창립자인 Andrej Karpathy가 이 용어를 만들었습니다.</p>
+
+    <p>핵심 아이디어는 간단합니다. 개발자가 구현의 세부사항에 집중하는 대신, AI에게 "분위기(vibe)"를 전달하면 AI가 구체적인 코드로 변환해준다는 것입니다. 개발자는 마치 시니어 엔지니어가 주니어 개발자에게 작업을 지시하듯, AI에게 무엇을 만들어야 하는지 설명합니다.</p>
+
+    <h3>바이브 코딩의 핵심 원칙</h3>
+
+    <ul>
+      <li><strong>의도 중심 개발:</strong> "어떻게(How)" 보다 "무엇을(What)" 원하는지에 집중</li>
+      <li><strong>반복적 대화:</strong> AI와의 대화를 통해 점진적으로 결과물을 개선</li>
+      <li><strong>검증과 조율:</strong> AI가 생성한 코드를 이해하고 품질을 확인</li>
+      <li><strong>컨텍스트 관리:</strong> AI에게 충분한 배경 정보를 제공하여 정확도를 높임</li>
+    </ul>
+
+    <div class="info-box">
+      <strong>알아두기:</strong> 바이브 코딩은 코드를 전혀 모르는 상태에서 프로그래밍하는 것이 아닙니다. 오히려 소프트웨어 아키텍처, 설계 패턴, 코드 품질에 대한 이해가 있어야 AI가 생성한 코드를 효과적으로 검증하고 방향을 잡아줄 수 있습니다.
+    </div>
+
+    <h2>주요 AI 코딩 도구 비교</h2>
+
+    <p>2026년 현재 바이브 코딩에 활용할 수 있는 주요 도구들을 비교해보겠습니다.</p>
+
+    <h3>Claude Code</h3>
+
+    <p>Anthropic이 만든 터미널 기반 AI 코딩 에이전트입니다. 프로젝트의 전체 컨텍스트를 이해하고, 파일 생성/수정, 명령어 실행, Git 관리까지 자율적으로 수행합니다.</p>
+
+    <pre><code># Claude Code 설치 및 실행
+npm install -g @anthropic-ai/claude-code
+cd my-project
+claude
+
+# 프로젝트 컨텍스트를 자동으로 파악한 후 대화 시작
+&gt; 이 프로젝트에 사용자 인증 기능을 추가해줘.
+  JWT 기반으로 구현하고, 로그인/회원가입/토큰 갱신 API를 만들어줘.
+
+# Claude Code가 자동으로:
+# 1. 프로젝트 구조 분석
+# 2. 필요한 패키지 설치 (jsonwebtoken, bcrypt 등)
+# 3. 인증 미들웨어 생성
+# 4. API 라우트 구현
+# 5. 테스트 코드 작성</code></pre>
+
+    <p><strong>장점:</strong> 프로젝트 전체를 이해하는 뛰어난 컨텍스트 파악 능력, 터미널 명령어 실행 가능, 멀티 파일 동시 수정, Git 연동</p>
+    <p><strong>적합한 상황:</strong> 새 기능 추가, 리팩토링, 버그 수정 등 대규모 코드 변경 작업</p>
+
+    <h3>Cursor</h3>
+
+    <p>VS Code 기반의 AI 네이티브 IDE입니다. 에디터 환경에서 자연스럽게 AI와 협업할 수 있으며, 코드 자동 완성과 에이전트 모드를 제공합니다.</p>
+
+    <pre><code># Cursor의 Agent 모드 사용 예시 (Cmd+I 또는 Ctrl+I)
+
+# 프롬프트: "이 React 컴포넌트에 다크모드 토글을 추가해줘.
+# Tailwind CSS를 사용하고, localStorage에 사용자 설정을 저장해."
+
+# Cursor Agent가 생성하는 코드:
+import { useState, useEffect } from 'react';
+
+export function ThemeToggle() {
+  const [isDark, setIsDark] = useState(() =&gt; {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'dark';
+    }
+    return false;
+  });
+
+  useEffect(() =&gt; {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
+
+  return (
+    &lt;button
+      onClick={() =&gt; setIsDark(!isDark)}
+      className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700
+                 hover:bg-gray-300 dark:hover:bg-gray-600
+                 transition-colors"
+    &gt;
+      {isDark ? '🌙' : '☀️'}
+    &lt;/button&gt;
+  );
+}</code></pre>
+
+    <p><strong>장점:</strong> 익숙한 VS Code 환경, 뛰어난 코드 자동 완성, 에디터 내 인라인 수정, 다중 파일 에이전트 모드</p>
+    <p><strong>적합한 상황:</strong> 일상적인 코딩 작업, 코드 수정 및 개선, 에디터 기반 워크플로우 선호 시</p>
+
+    <h3>GitHub Copilot</h3>
+
+    <p>GitHub과 OpenAI가 협력하여 만든 AI 페어 프로그래머입니다. VS Code, JetBrains 등 다양한 IDE에서 사용할 수 있으며, Copilot Chat과 에이전트 모드를 제공합니다.</p>
+
+    <pre><code># GitHub Copilot 에이전트 모드 예시
+
+# 프롬프트: "Express.js에서 파일 업로드 API를 만들어줘.
+# multer를 사용하고, 이미지 파일만 허용하며,
+# 최대 5MB로 제한해."
+
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) =&gt; {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) =&gt; {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const fileFilter = (req, file, cb) =&gt; {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('이미지 파일만 업로드할 수 있습니다.'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+router.post('/upload', upload.single('image'), (req, res) =&gt; {
+  if (!req.file) {
+    return res.status(400).json({ error: '파일이 없습니다.' });
+  }
+  res.json({
+    message: '업로드 성공',
+    filename: req.file.filename,
+    size: req.file.size
+  });
+});</code></pre>
+
+    <p><strong>장점:</strong> 광범위한 IDE 지원, GitHub 생태계 통합, 코드 자동 완성 품질, 기업용 보안 기능</p>
+    <p><strong>적합한 상황:</strong> GitHub 워크플로우 중심 개발, 팀 단위 협업, 다양한 IDE 사용 시</p>
+
+    <div class="ad-container"></div>
+
+    <h3>도구 비교 요약</h3>
+
+    <pre><code>┌──────────────┬──────────────┬──────────────┬──────────────┐
+│   기능        │ Claude Code  │   Cursor     │ Copilot      │
+├──────────────┼──────────────┼──────────────┼──────────────┤
+│ 인터페이스    │ 터미널(CLI)   │ IDE(VS Code) │ IDE 플러그인  │
+│ 에이전트 모드 │ 기본 동작     │ 지원         │ 지원          │
+│ 멀티파일 수정 │ 뛰어남       │ 뛰어남       │ 우수          │
+│ 터미널 실행   │ 지원         │ 지원         │ 제한적        │
+│ Git 연동      │ 뛰어남       │ 우수         │ 뛰어남        │
+│ 컨텍스트 이해 │ 뛰어남       │ 뛰어남       │ 우수          │
+│ 자동 완성     │ 해당 없음    │ 뛰어남       │ 뛰어남        │
+│ 가격(월)      │ 사용량 기반   │ $20~$40     │ $10~$39      │
+└──────────────┴──────────────┴──────────────┴──────────────┘</code></pre>
+
+    <h2>효과적인 프롬프트 작성법</h2>
+
+    <p>바이브 코딩의 핵심은 AI에게 의도를 정확하게 전달하는 프롬프트 작성 능력입니다. 같은 도구를 사용해도 프롬프트 품질에 따라 결과가 크게 달라집니다.</p>
+
+    <h3>1. 컨텍스트를 먼저 제공하라</h3>
+
+    <pre><code># 나쁜 프롬프트
+"로그인 기능 만들어줘"
+
+# 좋은 프롬프트
+"이 프로젝트는 Next.js 14 + TypeScript + Prisma + PostgreSQL 스택이야.
+현재 User 모델이 이미 있고, bcrypt로 비밀번호를 해시하고 있어.
+이 환경에서 이메일/비밀번호 기반 로그인 API 라우트를 만들어줘.
+NextAuth.js의 Credentials Provider를 사용하고,
+JWT 세션 전략을 적용해."</code></pre>
+
+    <h3>2. 원하는 결과의 형태를 명시하라</h3>
+
+    <pre><code># 나쁜 프롬프트
+"테스트 코드 작성해줘"
+
+# 좋은 프롬프트
+"UserService의 createUser 메서드에 대한 단위 테스트를 작성해줘.
+- Jest와 @testing-library를 사용
+- 성공 케이스: 유효한 입력으로 사용자 생성
+- 실패 케이스: 중복 이메일, 잘못된 비밀번호 형식, 필수 필드 누락
+- 각 테스트는 독립적으로 실행 가능해야 함
+- Mock은 Prisma Client에 대해서만 사용"</code></pre>
+
+    <h3>3. 제약 조건을 명확히 하라</h3>
+
+    <pre><code># 좋은 프롬프트 - 제약 조건 포함
+"결제 처리 모듈을 만들어줘. 다음 조건을 지켜줘:
+- 외부 결제 API(Toss Payments)와 연동
+- 결제 금액은 서버 측에서 재검증
+- 모든 결제 요청/응답을 DB에 로그로 저장
+- 실패 시 최대 3회 자동 재시도 (exponential backoff)
+- 동시성 문제를 방지하기 위해 멱등성 키 사용
+- 환불 처리도 포함"</code></pre>
+
+    <h3>4. 점진적으로 구체화하라</h3>
+
+    <pre><code># 1단계: 큰 그림부터
+"사용자 대시보드 페이지를 만들어줘. 왼쪽 사이드바, 상단 헤더,
+메인 콘텐츠 영역으로 구성된 레이아웃이야."
+
+# 2단계: 세부 기능 추가
+"대시보드의 메인 콘텐츠 영역에 차트를 추가해줘.
+최근 7일간의 일별 매출 데이터를 라인 차트로 보여줘.
+Recharts 라이브러리를 사용하고, 반응형으로 구현해."
+
+# 3단계: 개선 및 최적화
+"차트 컴포넌트에 로딩 상태와 에러 상태를 추가해줘.
+데이터가 없을 때는 빈 상태 UI를 보여주고,
+React Query로 데이터 페칭과 캐싱을 관리해."</code></pre>
+
+    <div class="info-box">
+      <strong>프로 팁:</strong> AI에게 코드를 생성하기 전에 먼저 구현 계획을 설명해달라고 요청하세요. "코드를 작성하기 전에 먼저 어떤 파일들을 수정할 건지, 전체 구현 계획을 설명해줘"라고 하면 잘못된 방향으로 코드가 생성되는 것을 미리 방지할 수 있습니다.
+    </div>
+
+    <h2>실제 프로젝트 적용 사례</h2>
+
+    <h3>사례 1: REST API 서버 구축</h3>
+
+    <p>자연어 프롬프트만으로 전체 API 서버를 구축한 실제 워크플로우입니다.</p>
+
+    <pre><code># 프롬프트 1: 프로젝트 초기화
+"Node.js + Express + TypeScript로 REST API 프로젝트를 초기 설정해줘.
+ESLint, Prettier, nodemon 설정도 포함하고,
+src/ 디렉토리 구조는 controller, service, repository, middleware로 나눠줘."
+
+# 프롬프트 2: 데이터 모델 정의
+"Prisma를 사용해서 다음 모델을 정의해줘:
+- User: id, email, password, name, role(ADMIN/USER), createdAt
+- Post: id, title, content, published, authorId(User 참조), createdAt, updatedAt
+- Comment: id, content, postId(Post 참조), authorId(User 참조), createdAt"
+
+# 프롬프트 3: CRUD API 구현
+"Post 모델에 대한 CRUD API를 구현해줘.
+- GET /posts: 목록 조회 (페이지네이션, 검색, 정렬)
+- GET /posts/:id: 상세 조회 (댓글 포함)
+- POST /posts: 생성 (인증 필요)
+- PUT /posts/:id: 수정 (작성자만 가능)
+- DELETE /posts/:id: 삭제 (작성자 또는 관리자만 가능)
+요청 검증은 zod를 사용해."
+
+# 프롬프트 4: 미들웨어 추가
+"다음 미들웨어를 구현해줘:
+- 인증 미들웨어: JWT 토큰 검증
+- 에러 핸들링 미들웨어: 일관된 에러 응답 형식
+- 요청 로깅 미들웨어: morgan + winston 조합
+- Rate limiting: express-rate-limit으로 IP당 분당 100회 제한"</code></pre>
+
+    <h3>사례 2: 프론트엔드 컴포넌트 개발</h3>
+
+    <pre><code># 프롬프트: 복잡한 폼 컴포넌트 생성
+"React Hook Form과 Zod를 사용한 회원가입 폼을 만들어줘.
+필드: 이름, 이메일, 비밀번호, 비밀번호 확인, 전화번호, 약관 동의
+검증 규칙:
+- 이메일: 유효한 이메일 형식
+- 비밀번호: 8자 이상, 대소문자 + 숫자 + 특수문자 포함
+- 비밀번호 확인: 비밀번호와 일치
+- 전화번호: 010-XXXX-XXXX 형식
+실시간 유효성 검사와 에러 메시지를 한글로 표시해줘.
+Tailwind CSS로 스타일링하고, 접근성(a11y)도 고려해."</code></pre>
+
+    <div class="ad-container"></div>
+
+    <h2>바이브 코딩의 주의사항과 한계</h2>
+
+    <h3>반드시 코드를 검증하라</h3>
+
+    <p>AI가 생성한 코드는 겉으로 보기에 올바르게 보여도 미묘한 버그, 보안 취약점, 성능 문제가 숨어있을 수 있습니다. 특히 다음 영역에서 주의가 필요합니다.</p>
+
+    <ul>
+      <li><strong>보안:</strong> SQL Injection, XSS, CSRF 등의 취약점이 포함될 수 있습니다</li>
+      <li><strong>에러 처리:</strong> 해피 패스(Happy Path)만 구현되고 예외 상황 처리가 누락될 수 있습니다</li>
+      <li><strong>엣지 케이스:</strong> 빈 배열, null 값, 동시성 문제 등을 놓칠 수 있습니다</li>
+      <li><strong>성능:</strong> N+1 쿼리 문제, 불필요한 재렌더링 등이 발생할 수 있습니다</li>
+    </ul>
+
+    <div class="warning-box">
+      <strong>경고:</strong> 바이브 코딩으로 생성된 코드를 검증 없이 프로덕션에 배포하지 마세요. AI가 생성한 코드에도 반드시 코드 리뷰, 테스트, 보안 점검을 수행해야 합니다. AI는 도우미이지, 코드의 최종 책임자가 아닙니다.
+    </div>
+
+    <h3>환각(Hallucination) 문제</h3>
+
+    <p>AI가 존재하지 않는 API, 패키지, 메서드를 사용하는 코드를 생성할 수 있습니다. 특히 최신 라이브러리나 마이너한 패키지에서 이런 문제가 자주 발생합니다.</p>
+
+    <pre><code># AI가 생성한 코드 예시 - 존재하지 않는 API 사용
+import { useServerAction } from 'next/server-actions';  // 이런 모듈은 없음!
+
+# 대응 방법:
+# 1. 생성된 import문의 패키지가 실제 존재하는지 확인
+# 2. 사용된 API가 해당 라이브러리의 실제 API인지 공식 문서에서 검증
+# 3. 가능하면 AI에게 사용할 라이브러리 버전을 명시적으로 알려줌</code></pre>
+
+    <h3>컨텍스트 한계</h3>
+
+    <p>프로젝트가 커지면 AI가 전체 코드를 한 번에 파악하기 어려워집니다. 이때는 관련 파일을 명시적으로 지정하거나, 프로젝트 구조를 설명하는 문서를 제공하면 도움이 됩니다.</p>
+
+    <pre><code># CLAUDE.md나 .cursorrules 파일에 프로젝트 컨텍스트 정의
+# 이 파일을 통해 AI에게 프로젝트 규칙을 전달할 수 있음
+
+## 프로젝트 개요
+이 프로젝트는 온라인 서점 플랫폼입니다.
+
+## 기술 스택
+- Frontend: Next.js 14, TypeScript, Tailwind CSS
+- Backend: tRPC, Prisma, PostgreSQL
+- 인증: NextAuth.js (Google, GitHub OAuth)
+
+## 코딩 컨벤션
+- 컴포넌트: 함수형 컴포넌트 + 화살표 함수
+- 상태 관리: React Query + Zustand
+- 테스트: Vitest + Testing Library
+- 네이밍: camelCase(변수, 함수), PascalCase(컴포넌트, 타입)
+
+## 디렉토리 구조
+- src/app/: Next.js App Router 페이지
+- src/components/: 재사용 컴포넌트
+- src/server/: tRPC 라우터 및 서비스 로직
+- src/lib/: 유틸리티 함수</code></pre>
+
+    <h2>개발자 역할의 변화</h2>
+
+    <p>바이브 코딩의 확산으로 개발자의 역할이 크게 변화하고 있습니다. 코드를 한 줄 한 줄 작성하는 능력보다, 더 높은 수준의 역량이 중요해지고 있습니다.</p>
+
+    <h3>더 중요해지는 역량</h3>
+
+    <ul>
+      <li><strong>시스템 설계:</strong> 전체 아키텍처를 설계하고 기술적 의사 결정을 내리는 능력</li>
+      <li><strong>코드 리뷰:</strong> AI가 생성한 코드의 품질, 보안, 성능을 평가하는 능력</li>
+      <li><strong>문제 정의:</strong> 비즈니스 요구사항을 명확한 기술적 스펙으로 변환하는 능력</li>
+      <li><strong>디버깅:</strong> 복잡한 시스템에서 문제의 근본 원인을 찾아내는 능력</li>
+      <li><strong>프롬프트 엔지니어링:</strong> AI에게 효과적으로 지시하는 커뮤니케이션 능력</li>
+    </ul>
+
+    <h3>개발 프로세스의 변화</h3>
+
+    <pre><code># 전통적인 개발 프로세스
+요구사항 분석 → 설계 → 코딩 → 테스트 → 배포
+
+# 바이브 코딩 시대의 개발 프로세스
+요구사항 분석 → 설계 → 프롬프트 작성 → AI 코드 생성
+→ 코드 리뷰/검증 → 수정 요청 → 테스트 → 배포
+
+# 핵심 변화:
+# - "코딩" 단계가 "프롬프트 작성 + AI 생성 + 검증" 으로 확장
+# - 개발자의 역할이 "코드 작성자"에서 "코드 감독자"로 전환
+# - 반복 속도가 크게 향상 (분 단위에서 초 단위로)</code></pre>
+
+    <div class="info-box">
+      <strong>개인적 견해:</strong> 바이브 코딩은 개발자를 대체하는 것이 아니라, 개발자의 생산성을 극대화하는 도구입니다. 마치 IDE가 텍스트 에디터를 대체했고, Git이 수동 버전 관리를 대체한 것처럼, 바이브 코딩은 소프트웨어 개발의 자연스러운 진화입니다. 중요한 것은 이 도구를 얼마나 효과적으로 활용하느냐입니다.
+    </div>
+
+    <h2>시작하기 위한 실전 팁</h2>
+
+    <h3>바이브 코딩을 처음 시작한다면</h3>
+
+    <ul>
+      <li><strong>작은 프로젝트부터 시작하세요:</strong> 사이드 프로젝트나 프로토타입 제작에 먼저 적용해보세요</li>
+      <li><strong>하나의 도구에 먼저 익숙해지세요:</strong> Claude Code, Cursor, Copilot 중 하나를 선택하여 깊이 사용해보세요</li>
+      <li><strong>프롬프트를 기록하세요:</strong> 효과적이었던 프롬프트 패턴을 모아두면 재활용할 수 있습니다</li>
+      <li><strong>코드 리뷰 습관을 유지하세요:</strong> AI가 생성한 코드도 반드시 직접 읽고 이해하세요</li>
+      <li><strong>점진적으로 확장하세요:</strong> 익숙해지면 더 복잡한 작업으로 범위를 넓혀가세요</li>
+    </ul>
+
+    <h2>마치며</h2>
+
+    <p>바이브 코딩은 개발 방식의 근본적인 변화를 나타냅니다. 코드를 작성하는 시간이 줄어들고, 설계하고 검증하고 방향을 잡는 데 더 많은 시간을 쓸 수 있게 되었습니다.</p>
+
+    <p>이 변화를 두려워하기보다는, 새로운 도구를 적극적으로 익히고 활용하는 것이 중요합니다. 결국 좋은 소프트웨어를 만드는 것은 코드를 직접 타이핑하느냐가 아니라, 올바른 문제를 올바른 방법으로 해결하느냐에 달려있기 때문입니다.</p>
+
+    <p>지금 바로 AI 코딩 도구 하나를 선택해서 직접 체험해보시길 권합니다. 한번 경험하면 다시 돌아갈 수 없을 것입니다.</p>
+
+    <div class="ad-container"></div>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
