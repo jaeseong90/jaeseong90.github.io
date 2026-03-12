@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Kotlin Coroutines를 Spring Boot에 적용하여 비동기 처리를 구현하는 방법. WebFlux 없이 코루틴으로 논블로킹 API 만들기.">
+  <meta name="keywords" content="Kotlin, Coroutines, Spring Boot, 비동기, 논블로킹, suspend, Flow">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="Kotlin Coroutines + Spring Boot 비동기 처리 실전">
+  <meta property="og:description" content="WebFlux 없이 Kotlin Coroutines로 고성능 비동기 API를 구현하는 방법">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/kotlin-coroutines-spring.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/kotlin-coroutines-spring.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+  <title>Kotlin Coroutines + Spring Boot 비동기 처리 실전 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="post-header">
+    <div class="container">
+      <span class="post-tag">Kotlin</span>
+      <h1>Kotlin Coroutines + Spring Boot 비동기 처리 실전</h1>
+      <div class="post-meta">
+        <span>2025.04.15</span>
+        <span>14분 읽기</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="ad-container"></div>
+
+    <article class="post-content">
+      <h2>왜 Kotlin Coroutines인가?</h2>
+      <p>Spring WebFlux의 리액티브 프로그래밍은 강력하지만, Mono와 Flux 체인의 학습 곡선이 높고 디버깅이 어렵다는 단점이 있습니다. Kotlin Coroutines는 비동기 코드를 동기 코드처럼 직관적으로 작성할 수 있어, 팀 전체의 생산성을 높이는 데 효과적이었습니다.</p>
+      <p>실제로 저희 팀에서는 기존 Java + WebFlux 프로젝트를 Kotlin + Coroutines로 전환한 후 코드 가독성이 크게 향상되었고, 신규 멤버의 온보딩 시간도 줄어들었습니다.</p>
+
+      <h2>프로젝트 설정</h2>
+      <pre><code>// build.gradle.kts
+plugins {
+    kotlin("jvm") version "1.9.22"
+    kotlin("plugin.spring") version "1.9.22"
+    id("org.springframework.boot") version "3.2.2"
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
+}</code></pre>
+
+      <h2>suspend 함수로 Controller 작성</h2>
+      <p>Spring WebFlux 환경에서 Controller의 핸들러 함수를 suspend로 선언하면 자동으로 코루틴 컨텍스트에서 실행됩니다.</p>
+
+      <pre><code>@RestController
+@RequestMapping("/api/orders")
+class OrderController(
+    private val orderService: OrderService,
+    private val notificationService: NotificationService
+) {
+
+    @GetMapping("/{id}")
+    suspend fun getOrder(@PathVariable id: Long): OrderResponse {
+        return orderService.findById(id)
+    }
+
+    @PostMapping
+    suspend fun createOrder(
+        @RequestBody request: CreateOrderRequest
+    ): ResponseEntity&lt;OrderResponse&gt; {
+        val order = orderService.create(request)
+
+        // 비동기로 알림 전송 (주문 생성과 독립적)
+        coroutineScope {
+            launch {
+                notificationService.sendOrderConfirmation(order)
+            }
+        }
+
+        return ResponseEntity
+            .created(URI("/api/orders/${order.id}"))
+            .body(order)
+    }
+}</code></pre>
+
+      <h2>Service 레이어의 코루틴 활용</h2>
+
+      <h3>병렬 호출로 응답 시간 단축</h3>
+      <p>독립적인 여러 API를 호출해야 할 때, async를 사용하여 병렬로 처리하면 전체 응답 시간을 크게 줄일 수 있습니다.</p>
+
+      <pre><code>@Service
+class DashboardService(
+    private val orderRepository: OrderRepository,
+    private val userRepository: UserRepository,
+    private val analyticsClient: AnalyticsClient
+) {
+
+    suspend fun getDashboard(userId: Long): DashboardResponse =
+        coroutineScope {
+            val ordersDeferred = async {
+                orderRepository.findRecentByUserId(userId)
+            }
+            val profileDeferred = async {
+                userRepository.findById(userId)
+            }
+            val statsDeferred = async {
+                analyticsClient.getUserStats(userId)
+            }
+
+            DashboardResponse(
+                orders = ordersDeferred.await(),
+                profile = profileDeferred.await(),
+                stats = statsDeferred.await()
+            )
+        }
+}</code></pre>
+
+      <h3>Flow를 활용한 스트리밍</h3>
+      <p>대량 데이터를 처리하거나 SSE(Server-Sent Events)를 구현할 때 Kotlin Flow가 유용합니다.</p>
+
+      <pre><code>@Service
+class EventStreamService(
+    private val eventRepository: EventRepository
+) {
+
+    fun streamEvents(userId: Long): Flow&lt;ServerSentEvent&lt;EventDto&gt;&gt; = flow {
+        while (currentCoroutineContext().isActive) {
+            val events = eventRepository.findNewEvents(userId)
+            events.forEach { event -&gt;
+                emit(ServerSentEvent.builder(EventDto.from(event)).build())
+            }
+            delay(1000) // 1초 간격 폴링
+        }
+    }
+}</code></pre>
+
+      <h2>예외 처리 패턴</h2>
+      <p>코루틴 환경에서의 예외 처리는 기존 Spring MVC와 유사하지만 몇 가지 주의점이 있습니다.</p>
+
+      <pre><code>@Service
+class OrderService(
+    private val orderRepository: OrderRepository,
+    private val inventoryClient: InventoryClient
+) {
+
+    suspend fun create(request: CreateOrderRequest): OrderResponse {
+        // supervisorScope: 하위 코루틴 실패가 부모에 전파되지 않음
+        return supervisorScope {
+            val order = orderRepository.save(request.toEntity())
+
+            // 재고 차감 실패 시에도 주문은 생성됨
+            val inventoryResult = runCatching {
+                withTimeout(3000) {
+                    inventoryClient.deductStock(
+                        request.productId,
+                        request.quantity
+                    )
+                }
+            }
+
+            if (inventoryResult.isFailure) {
+                log.warn("재고 차감 실패, 보상 트랜잭션 필요: ${order.id}")
+                order.markPendingInventory()
+                orderRepository.save(order)
+            }
+
+            OrderResponse.from(order)
+        }
+    }
+}</code></pre>
+
+      <h2>테스트 작성</h2>
+      <pre><code>@SpringBootTest
+class OrderServiceTest {
+
+    @Test
+    fun `주문 생성 시 재고가 차감된다`() = runTest {
+        // given
+        val request = CreateOrderRequest(
+            productId = 1L, quantity = 2
+        )
+
+        // when
+        val result = orderService.create(request)
+
+        // then
+        assertThat(result.status).isEqualTo(OrderStatus.CONFIRMED)
+        coVerify { inventoryClient.deductStock(1L, 2) }
+    }
+
+    @Test
+    fun `재고 서비스 타임아웃 시 주문은 보류 상태`() = runTest {
+        // given
+        coEvery {
+            inventoryClient.deductStock(any(), any())
+        } coAnswers { delay(5000) } // 타임아웃 유발
+
+        // when
+        val result = orderService.create(createRequest())
+
+        // then
+        assertThat(result.status)
+            .isEqualTo(OrderStatus.PENDING_INVENTORY)
+    }
+}</code></pre>
+
+      <h2>성능 비교</h2>
+      <p>동일한 API를 Java + WebFlux와 Kotlin + Coroutines로 구현하여 비교한 결과, 처리량(throughput)은 거의 동일했습니다. 다만 코드량은 약 30% 줄어들었고, 스택 트레이스가 훨씬 읽기 쉬워져 디버깅 시간이 단축되었습니다.</p>
+
+      <h2>마무리</h2>
+      <p>Kotlin Coroutines는 비동기 프로그래밍의 복잡성을 대폭 줄여줍니다. 특히 여러 외부 서비스를 호출하는 마이크로서비스 아키텍처에서 그 효과가 극대화됩니다. 다만 기존 Java 프로젝트와의 호환성, 팀의 Kotlin 숙련도 등을 고려하여 도입 시점을 결정하는 것이 좋습니다.</p>
+
+      <div class="post-nav">
+        <a href="../index.html">&larr; 목록으로</a>
+        <a href="redis-caching-spring-boot.html">다음 글 &rarr;</a>
+      </div>
+    </article>
+
+    <div class="ad-container"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
