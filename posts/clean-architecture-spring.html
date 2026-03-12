@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Spring Boot 프로젝트에 Clean Architecture를 적용하는 실전 가이드. 헥사고날 아키텍처, 포트와 어댑터 패턴 구현.">
+  <meta name="keywords" content="Clean Architecture, Spring Boot, 헥사고날, Hexagonal, 포트와어댑터, DDD, 아키텍처">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="Spring Boot에 Clean Architecture 적용하기: 실전 가이드">
+  <meta property="og:description" content="헥사고날 아키텍처로 유지보수 가능한 Spring Boot 프로젝트를 설계하는 방법">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/clean-architecture-spring.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/clean-architecture-spring.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+  <title>Spring Boot에 Clean Architecture 적용하기: 실전 가이드 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="post-header">
+    <div class="container">
+      <span class="post-tag">Architecture</span>
+      <h1>Spring Boot에 Clean Architecture 적용하기: 실전 가이드</h1>
+      <div class="post-meta">
+        <span>2025.05.01</span>
+        <span>15분 읽기</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="ad-container"></div>
+
+    <article class="post-content">
+      <h2>왜 Clean Architecture인가?</h2>
+      <p>프로젝트가 성장하면서 비즈니스 로직이 Controller, Service, Repository 곳곳에 흩어지는 경험을 해보셨나요? 처음에는 빠르게 개발할 수 있지만, 시간이 지나면 기능 하나를 수정하기 위해 여러 레이어를 동시에 변경해야 하는 상황이 발생합니다.</p>
+      <p>Clean Architecture는 의존성 방향을 안쪽(도메인)으로 통일시켜, 비즈니스 로직을 프레임워크나 인프라에 의존하지 않도록 분리합니다. 이로써 테스트 용이성, 유지보수성, 그리고 기술 스택 교체의 유연성을 얻을 수 있습니다.</p>
+
+      <h2>패키지 구조 설계</h2>
+      <p>Spring Boot에 헥사고날 아키텍처를 적용할 때 가장 먼저 결정해야 할 것이 패키지 구조입니다.</p>
+
+      <pre><code>com.example.order/
+├── domain/                    # 핵심 비즈니스 로직
+│   ├── model/
+│   │   ├── Order.java
+│   │   ├── OrderItem.java
+│   │   └── OrderStatus.java
+│   ├── port/
+│   │   ├── in/               # Inbound Ports (Use Cases)
+│   │   │   ├── CreateOrderUseCase.java
+│   │   │   └── GetOrderUseCase.java
+│   │   └── out/              # Outbound Ports
+│   │       ├── OrderRepository.java
+│   │       ├── PaymentGateway.java
+│   │       └── NotificationSender.java
+│   └── service/
+│       └── OrderDomainService.java
+├── application/               # Use Case 구현
+│   ├── CreateOrderService.java
+│   └── GetOrderService.java
+└── adapter/                   # 외부 세계와의 연결
+    ├── in/
+    │   └── web/
+    │       ├── OrderController.java
+    │       └── dto/
+    │           ├── CreateOrderRequest.java
+    │           └── OrderResponse.java
+    └── out/
+        ├── persistence/
+        │   ├── OrderJpaRepository.java
+        │   ├── OrderJpaEntity.java
+        │   └── OrderPersistenceAdapter.java
+        ├── payment/
+        │   └── TossPaymentAdapter.java
+        └── notification/
+            └── SlackNotificationAdapter.java</code></pre>
+
+      <h2>도메인 모델 설계</h2>
+      <p>도메인 모델은 어떤 프레임워크에도 의존하지 않는 순수 Java 객체입니다. JPA 어노테이션이나 Spring 의존성 없이 비즈니스 규칙만 담습니다.</p>
+
+      <pre><code>public class Order {
+    private final OrderId id;
+    private final UserId userId;
+    private final List&lt;OrderItem&gt; items;
+    private OrderStatus status;
+    private Money totalAmount;
+
+    public void addItem(Product product, int quantity) {
+        validateOrderModifiable();
+        if (quantity &lt;= 0) {
+            throw new InvalidOrderException(
+                "수량은 1 이상이어야 합니다");
+        }
+        items.add(OrderItem.of(product, quantity));
+        recalculateTotal();
+    }
+
+    public void confirm() {
+        if (status != OrderStatus.PENDING) {
+            throw new InvalidOrderStateException(
+                "대기 상태의 주문만 확정할 수 있습니다");
+        }
+        if (items.isEmpty()) {
+            throw new InvalidOrderException(
+                "주문 항목이 비어있습니다");
+        }
+        this.status = OrderStatus.CONFIRMED;
+    }
+
+    private void validateOrderModifiable() {
+        if (status != OrderStatus.PENDING) {
+            throw new InvalidOrderStateException(
+                "수정 가능한 상태가 아닙니다: " + status);
+        }
+    }
+
+    private void recalculateTotal() {
+        this.totalAmount = items.stream()
+            .map(OrderItem::getSubtotal)
+            .reduce(Money.ZERO, Money::add);
+    }
+}</code></pre>
+
+      <h2>포트 정의</h2>
+
+      <h3>Inbound Port (Use Case 인터페이스)</h3>
+      <pre><code>public interface CreateOrderUseCase {
+    OrderId execute(CreateOrderCommand command);
+}
+
+public record CreateOrderCommand(
+    Long userId,
+    List&lt;OrderItemCommand&gt; items,
+    String couponCode
+) {
+    public CreateOrderCommand {
+        Objects.requireNonNull(userId, "userId는 필수입니다");
+        if (items == null || items.isEmpty()) {
+            throw new IllegalArgumentException(
+                "주문 항목은 최소 1개 이상이어야 합니다");
+        }
+    }
+}</code></pre>
+
+      <h3>Outbound Port (인프라 인터페이스)</h3>
+      <pre><code>public interface OrderRepository {
+    Order save(Order order);
+    Optional&lt;Order&gt; findById(OrderId id);
+    List&lt;Order&gt; findByUserId(UserId userId);
+}
+
+public interface PaymentGateway {
+    PaymentResult processPayment(Order order, PaymentInfo info);
+    void cancelPayment(String paymentKey);
+}</code></pre>
+
+      <h2>Application Service (Use Case 구현)</h2>
+      <pre><code>@Service
+@Transactional
+@RequiredArgsConstructor
+public class CreateOrderService implements CreateOrderUseCase {
+
+    private final OrderRepository orderRepository;
+    private final PaymentGateway paymentGateway;
+    private final NotificationSender notificationSender;
+
+    @Override
+    public OrderId execute(CreateOrderCommand command) {
+        // 1. 도메인 객체 생성
+        Order order = Order.create(
+            UserId.of(command.userId()),
+            command.items().stream()
+                .map(this::toOrderItem)
+                .collect(Collectors.toList())
+        );
+
+        // 2. 비즈니스 규칙 실행
+        order.confirm();
+
+        // 3. 저장
+        Order savedOrder = orderRepository.save(order);
+
+        // 4. 알림 전송
+        notificationSender.sendOrderConfirmation(savedOrder);
+
+        return savedOrder.getId();
+    }
+}</code></pre>
+
+      <h2>어댑터 구현</h2>
+
+      <h3>Web Adapter (Inbound)</h3>
+      <pre><code>@RestController
+@RequestMapping("/api/orders")
+@RequiredArgsConstructor
+public class OrderController {
+
+    private final CreateOrderUseCase createOrderUseCase;
+    private final GetOrderUseCase getOrderUseCase;
+
+    @PostMapping
+    public ResponseEntity&lt;OrderResponse&gt; createOrder(
+            @Valid @RequestBody CreateOrderRequest request) {
+        CreateOrderCommand command = request.toCommand();
+        OrderId orderId = createOrderUseCase.execute(command);
+        return ResponseEntity
+            .created(URI.create("/api/orders/" + orderId.value()))
+            .body(OrderResponse.from(orderId));
+    }
+}</code></pre>
+
+      <h3>Persistence Adapter (Outbound)</h3>
+      <pre><code>@Component
+@RequiredArgsConstructor
+public class OrderPersistenceAdapter implements OrderRepository {
+
+    private final OrderJpaRepository jpaRepository;
+    private final OrderMapper mapper;
+
+    @Override
+    public Order save(Order order) {
+        OrderJpaEntity entity = mapper.toEntity(order);
+        OrderJpaEntity saved = jpaRepository.save(entity);
+        return mapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional&lt;Order&gt; findById(OrderId id) {
+        return jpaRepository.findById(id.value())
+                .map(mapper::toDomain);
+    }
+}</code></pre>
+
+      <h2>도입 시 고려사항</h2>
+      <p>Clean Architecture는 모든 프로젝트에 적합하지는 않습니다. 단순 CRUD 위주의 소규모 프로젝트에서는 오히려 보일러플레이트 코드가 늘어나 생산성이 떨어질 수 있습니다. 복잡한 비즈니스 로직이 있고, 장기적으로 유지보수해야 하는 프로젝트에서 그 진가가 발휘됩니다.</p>
+      <p>또한 팀원들이 아키텍처의 의도를 이해하고 동의해야 합니다. 아키텍처 결정 기록(ADR)을 작성하고, 코드 리뷰에서 의존성 방향을 지속적으로 검증하는 것이 중요합니다.</p>
+
+      <h2>마무리</h2>
+      <p>Clean Architecture의 핵심은 의존성 역전입니다. 비즈니스 로직이 프레임워크에 의존하는 것이 아니라, 프레임워크가 비즈니스 로직에 맞춰 구성되는 구조를 만드는 것입니다. 점진적으로 도입하되, 도메인 모델의 순수성을 지키는 것에 집중하면 성공적으로 적용할 수 있습니다.</p>
+
+      <div class="post-nav">
+        <a href="../index.html">&larr; 목록으로</a>
+        <a href="testcontainers-integration-testing.html">다음 글 &rarr;</a>
+      </div>
+    </article>
+
+    <div class="ad-container"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

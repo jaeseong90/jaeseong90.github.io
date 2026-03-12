@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Testcontainers를 활용한 Spring Boot 통합 테스트 환경 구축. 실제 DB, Redis, Kafka로 신뢰성 높은 테스트 작성법.">
+  <meta name="keywords" content="Testcontainers, Spring Boot, 통합테스트, Docker, JUnit5, PostgreSQL, Redis">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="Testcontainers로 Spring Boot 통합 테스트 완벽 구축">
+  <meta property="og:description" content="H2 대신 실제 DB로 테스트하여 운영 환경 이슈를 사전에 방지하는 방법">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/testcontainers-integration-testing.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/testcontainers-integration-testing.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+  <title>Testcontainers로 Spring Boot 통합 테스트 완벽 구축 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="post-header">
+    <div class="container">
+      <span class="post-tag">Testing</span>
+      <h1>Testcontainers로 Spring Boot 통합 테스트 완벽 구축</h1>
+      <div class="post-meta">
+        <span>2025.04.25</span>
+        <span>13분 읽기</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="ad-container"></div>
+
+    <article class="post-content">
+      <h2>H2로 테스트하면 안 되는 이유</h2>
+      <p>많은 프로젝트에서 통합 테스트에 H2 인메모리 데이터베이스를 사용합니다. 빠르고 설정이 간편하지만, 운영 환경과의 차이로 인해 치명적인 버그를 놓칠 수 있습니다. PostgreSQL의 JSON 연산자, MySQL의 풀텍스트 검색, 데이터베이스별 날짜 함수 차이 등은 H2에서 재현할 수 없습니다.</p>
+      <p>저희 팀에서도 H2에서는 통과했던 테스트가 운영 PostgreSQL에서 실패하는 사고를 여러 번 경험한 후, Testcontainers로 전면 전환했습니다.</p>
+
+      <h2>Testcontainers 설정</h2>
+
+      <pre><code>// build.gradle
+dependencies {
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:kafka'
+}</code></pre>
+
+      <h3>Spring Boot 3.1+ ServiceConnection 활용</h3>
+      <p>Spring Boot 3.1부터 @ServiceConnection 어노테이션으로 컨테이너 연결 설정을 자동화할 수 있습니다.</p>
+
+      <pre><code>@TestConfiguration(proxyBeanMethods = false)
+public class TestContainerConfig {
+
+    @Bean
+    @ServiceConnection
+    PostgreSQLContainer&lt;?&gt; postgresContainer() {
+        return new PostgreSQLContainer&lt;&gt;("postgres:16-alpine")
+                .withDatabaseName("testdb")
+                .withUsername("test")
+                .withPassword("test")
+                .withInitScript("schema.sql");
+    }
+
+    @Bean
+    @ServiceConnection
+    GenericContainer&lt;?&gt; redisContainer() {
+        return new GenericContainer&lt;&gt;("redis:7-alpine")
+                .withExposedPorts(6379);
+    }
+}</code></pre>
+
+      <h2>통합 테스트 작성 패턴</h2>
+
+      <h3>Repository 테스트</h3>
+      <pre><code>@DataJpaTest
+@Import(TestContainerConfig.class)
+@AutoConfigureTestDatabase(replace = Replace.NONE)
+class OrderRepositoryTest {
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Test
+    void PostgreSQL_네이티브쿼리가_정상_동작한다() {
+        // given
+        Order order = Order.builder()
+                .userId(1L)
+                .metadata(Map.of("coupon", "SUMMER2025"))
+                .build();
+        orderRepository.save(order);
+
+        // when - PostgreSQL JSON 연산자 사용
+        List&lt;Order&gt; results = orderRepository
+                .findByMetadataKey("coupon");
+
+        // then
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getMetadata())
+                .containsEntry("coupon", "SUMMER2025");
+    }
+
+    @Test
+    void 대량_데이터_페이징이_정상_동작한다() {
+        // given
+        List&lt;Order&gt; orders = IntStream.range(0, 100)
+                .mapToObj(i -&gt; Order.builder()
+                        .userId((long) i % 10)
+                        .amount(BigDecimal.valueOf(i * 1000))
+                        .build())
+                .collect(Collectors.toList());
+        orderRepository.saveAll(orders);
+
+        // when
+        Page&lt;Order&gt; page = orderRepository.findByUserId(
+                1L, PageRequest.of(0, 5, Sort.by("amount").descending()));
+
+        // then
+        assertThat(page.getTotalElements()).isEqualTo(10);
+        assertThat(page.getContent()).hasSize(5);
+        assertThat(page.getContent().get(0).getAmount())
+                .isGreaterThan(page.getContent().get(1).getAmount());
+    }
+}</code></pre>
+
+      <h3>API 통합 테스트</h3>
+      <pre><code>@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@Import(TestContainerConfig.class)
+class OrderApiIntegrationTest {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Test
+    void 주문_생성부터_조회까지_전체_흐름() {
+        // 1. 주문 생성
+        var createRequest = new CreateOrderRequest(1L, 2, "PRODUCT_A");
+        var createResponse = restTemplate.postForEntity(
+                "/api/orders", createRequest, OrderResponse.class);
+
+        assertThat(createResponse.getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+
+        Long orderId = createResponse.getBody().getId();
+
+        // 2. 주문 조회
+        var getResponse = restTemplate.getForEntity(
+                "/api/orders/" + orderId, OrderResponse.class);
+
+        assertThat(getResponse.getBody().getProductCode())
+                .isEqualTo("PRODUCT_A");
+        assertThat(getResponse.getBody().getQuantity())
+                .isEqualTo(2);
+    }
+}</code></pre>
+
+      <h2>테스트 성능 최적화</h2>
+
+      <h3>컨테이너 재사용으로 속도 향상</h3>
+      <p>테스트마다 컨테이너를 새로 시작하면 시간이 오래 걸립니다. Singleton 패턴을 활용하여 전체 테스트 스위트에서 컨테이너를 공유합니다.</p>
+
+      <pre><code>public abstract class AbstractIntegrationTest {
+
+    static final PostgreSQLContainer&lt;?&gt; POSTGRES;
+    static final GenericContainer&lt;?&gt; REDIS;
+
+    static {
+        POSTGRES = new PostgreSQLContainer&lt;&gt;("postgres:16-alpine")
+                .withReuse(true);
+        REDIS = new GenericContainer&lt;&gt;("redis:7-alpine")
+                .withExposedPorts(6379)
+                .withReuse(true);
+
+        POSTGRES.start();
+        REDIS.start();
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(
+            DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username",
+            POSTGRES::getUsername);
+        registry.add("spring.datasource.password",
+            POSTGRES::getPassword);
+        registry.add("spring.data.redis.host", REDIS::getHost);
+        registry.add("spring.data.redis.port",
+            () -&gt; REDIS.getMappedPort(6379));
+    }
+}</code></pre>
+
+      <h3>testcontainers.properties 설정</h3>
+      <pre><code># ~/.testcontainers.properties
+testcontainers.reuse.enable=true</code></pre>
+      <p>이 설정으로 로컬에서 컨테이너를 재사용하면 테스트 실행 시간이 50% 이상 단축됩니다.</p>
+
+      <h2>CI/CD 파이프라인에서의 활용</h2>
+      <p>GitHub Actions에서 Testcontainers를 사용하려면 Docker-in-Docker 또는 서비스 컨테이너 설정이 필요합니다. GitHub Actions는 기본적으로 Docker를 지원하므로 별도의 설정 없이 바로 사용할 수 있습니다.</p>
+
+      <h2>마무리</h2>
+      <p>Testcontainers는 통합 테스트의 신뢰성을 극적으로 높여줍니다. 초기 설정 비용이 있지만, 운영 환경에서 발생할 수 있는 DB 호환성 이슈를 개발 단계에서 잡아낼 수 있어 충분히 투자할 가치가 있습니다. 특히 Spring Boot 3.1+의 ServiceConnection 기능으로 설정이 훨씬 간편해졌으니, 아직 도입하지 않았다면 적극 고려해보세요.</p>
+
+      <div class="post-nav">
+        <a href="../index.html">&larr; 목록으로</a>
+        <a href="api-rate-limiting-design.html">다음 글 &rarr;</a>
+      </div>
+    </article>
+
+    <div class="ad-container"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
