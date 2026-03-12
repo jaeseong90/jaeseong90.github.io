@@ -1,4 +1,4 @@
-# 재성의 개발 블로그
+# Jaeseong의 개발 블로그
 
 Spring Boot, Flutter, AI, DevOps 등 실무에서 배운 개발 경험과 문제 해결 과정을 공유하는 기술 블로그입니다.
 
@@ -28,4 +28,4 @@ Spring Boot, Flutter, AI, DevOps 등 실무에서 배운 개발 경험과 문제
 
 ## 📄 라이선스
 
-&copy; 2025 재성의 개발 블로그. All rights reserved.
+&copy; 2025 Jaeseong의 개발 블로그. All rights reserved.
