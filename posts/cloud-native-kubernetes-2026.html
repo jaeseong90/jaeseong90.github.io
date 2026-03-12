@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="2026년 클라우드 네이티브 Kubernetes 실전 운영 가이드. Helm, ArgoCD GitOps, Istio 서비스 메시, 오토스케일링, FinOps 비용 최적화까지 다룹니다.">
+  <meta name="keywords" content="Kubernetes, 클라우드 네이티브, GitOps, ArgoCD, Helm, 서비스 메시, DevOps">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="클라우드 네이티브 Kubernetes 실전: 2026년 운영 가이드">
+  <meta property="og:description" content="Helm, ArgoCD GitOps, Istio 서비스 메시, 오토스케일링, FinOps 비용 최적화까지 Kubernetes 실전 운영 가이드">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/cloud-native-kubernetes-2026.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/cloud-native-kubernetes-2026.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+  <title>클라우드 네이티브 Kubernetes 실전: 2026년 운영 가이드 | 재성의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">DevOps</span>
+      <h1>클라우드 네이티브 Kubernetes 실전: 2026년 운영 가이드</h1>
+      <div class="post-meta">
+        <span>2026.03.03</span>
+        <span>14분 읽기</span>
+        <span>재성</span>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="ad-container"></div>
+
+    <article class="post-content">
+      <p>Kubernetes는 이제 컨테이너 오케스트레이션의 사실상 표준이 되었습니다. 하지만 클러스터를 구축하는 것과 프로덕션에서 안정적으로 운영하는 것은 완전히 다른 문제입니다. 2026년 현재 Kubernetes 생태계는 더욱 성숙해졌으며, GitOps, 서비스 메시, FinOps 등 운영 효율을 높이는 도구와 방법론이 풍부해졌습니다. 이 글에서는 실전 운영에 필요한 핵심 기술과 전략을 다룹니다.</p>
+
+      <h2>2026년 클라우드 네이티브 트렌드</h2>
+
+      <p>클라우드 네이티브 환경은 빠르게 진화하고 있습니다. 2026년 주목해야 할 핵심 트렌드를 살펴보겠습니다.</p>
+
+      <ul>
+        <li><strong>플랫폼 엔지니어링의 부상:</strong> 개발자 경험(DX)을 중시하는 내부 개발자 플랫폼(IDP) 구축이 주류로 자리잡았습니다. Backstage 같은 도구로 셀프서비스 인프라를 제공합니다.</li>
+        <li><strong>FinOps 필수화:</strong> 클라우드 비용 최적화가 더 이상 선택이 아니라 필수입니다. Kubecost, OpenCost 같은 도구로 네임스페이스별 비용을 추적합니다.</li>
+        <li><strong>Wasm(WebAssembly) 워크로드:</strong> SpinKube 등을 통해 Kubernetes에서 Wasm 기반 경량 워크로드를 실행하는 사례가 증가하고 있습니다.</li>
+        <li><strong>AI/ML 워크로드 최적화:</strong> GPU 스케줄링, vGPU 분할, 분산 학습을 위한 Kubernetes 네이티브 도구들이 성숙했습니다.</li>
+        <li><strong>멀티 클러스터 관리:</strong> 하이브리드/멀티 클라우드 환경에서 여러 클러스터를 통합 관리하는 것이 일반화되었습니다.</li>
+      </ul>
+
+      <h2>Kubernetes 핵심 개념 정리</h2>
+
+      <p>실전 운영에 앞서, 자주 혼동되는 핵심 개념을 명확히 정리하겠습니다.</p>
+
+      <h3>워크로드 리소스</h3>
+      <ul>
+        <li><strong>Pod:</strong> 하나 이상의 컨테이너가 실행되는 최소 배포 단위. 같은 Pod 내 컨테이너는 네트워크와 스토리지를 공유합니다.</li>
+        <li><strong>Deployment:</strong> 무상태(Stateless) 애플리케이션을 관리하며 롤링 업데이트와 롤백을 지원합니다.</li>
+        <li><strong>StatefulSet:</strong> 상태 유지가 필요한 워크로드(DB, 캐시)를 위한 리소스로, 안정적인 네트워크 ID와 영구 스토리지를 보장합니다.</li>
+        <li><strong>DaemonSet:</strong> 모든 노드(또는 특정 노드)에 하나의 Pod를 실행합니다. 로그 수집, 모니터링 에이전트에 사용됩니다.</li>
+      </ul>
+
+<pre><code># 프로덕션 수준의 Deployment 매니페스트
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  namespace: production
+  labels:
+    app: api-server
+    version: v2.1.0
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0    # 무중단 배포 보장
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+        version: v2.1.0
+    spec:
+      topologySpreadConstraints:   # 가용 영역 분산
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: api-server
+      containers:
+        - name: api-server
+          image: registry.company.com/api-server:v2.1.0
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password</code></pre>
+
+      <div class="warning-box">
+        <strong>resources 설정 필수:</strong> requests와 limits를 반드시 설정하세요. requests가 없으면 스케줄러가 적절한 노드를 선택할 수 없고, limits가 없으면 한 Pod가 노드의 모든 리소스를 독점할 수 있습니다.
+      </div>
+
+      <h2>Helm 차트 활용</h2>
+
+      <p>Helm은 Kubernetes 애플리케이션의 패키지 매니저입니다. 복잡한 매니페스트를 템플릿화하고, 환경별 설정을 values.yaml로 관리할 수 있습니다.</p>
+
+      <h3>커스텀 Helm 차트 구조</h3>
+
+<pre><code># Helm 차트 디렉토리 구조
+my-app/
+  Chart.yaml          # 차트 메타데이터
+  values.yaml         # 기본 설정값
+  values-dev.yaml     # 개발 환경 오버라이드
+  values-prod.yaml    # 운영 환경 오버라이드
+  templates/
+    deployment.yaml
+    service.yaml
+    ingress.yaml
+    hpa.yaml
+    configmap.yaml
+    _helpers.tpl      # 템플릿 헬퍼 함수</code></pre>
+
+<pre><code># values-prod.yaml - 운영 환경 설정
+replicaCount: 3
+
+image:
+  repository: registry.company.com/my-app
+  tag: "2.1.0"
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilization: 70
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: api.company.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: api-tls-secret
+      hosts:
+        - api.company.com</code></pre>
+
+<pre><code># Helm 명령어 예시
+# 차트 설치 (운영 환경)
+helm install my-app ./my-app \
+  -f values-prod.yaml \
+  -n production \
+  --create-namespace
+
+# 업그레이드 (롤링 업데이트)
+helm upgrade my-app ./my-app \
+  -f values-prod.yaml \
+  -n production \
+  --set image.tag=2.2.0
+
+# 롤백
+helm rollback my-app 1 -n production
+
+# 변경 사항 미리보기
+helm diff upgrade my-app ./my-app \
+  -f values-prod.yaml \
+  -n production</code></pre>
+
+      <h2>ArgoCD로 GitOps 구현</h2>
+
+      <p>GitOps는 Git 리포지토리를 단일 진실 원천(Single Source of Truth)으로 사용하여 인프라와 애플리케이션을 선언적으로 관리하는 운영 방법론입니다. ArgoCD는 Kubernetes 네이티브 GitOps 도구로 가장 널리 사용됩니다.</p>
+
+      <h3>GitOps의 핵심 원칙</h3>
+      <ul>
+        <li><strong>선언적(Declarative):</strong> 원하는 상태를 코드로 선언하고, 시스템이 자동으로 현재 상태를 맞춥니다</li>
+        <li><strong>버전 관리:</strong> 모든 변경사항이 Git 커밋으로 추적되어 감사와 롤백이 용이합니다</li>
+        <li><strong>자동 동기화:</strong> Git 변경이 감지되면 자동으로 클러스터에 반영됩니다</li>
+        <li><strong>자기 치유(Self-Healing):</strong> 누군가 수동으로 변경해도 Git 상태로 자동 복구됩니다</li>
+      </ul>
+
+<pre><code># ArgoCD Application 매니페스트
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app-production
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/company/k8s-manifests.git
+    targetRevision: main
+    path: apps/my-app/overlays/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true         # Git에서 삭제된 리소스 자동 제거
+      selfHeal: true      # 수동 변경 자동 복구
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m</code></pre>
+
+      <div class="info-box">
+        <strong>GitOps 리포지토리 전략:</strong> 애플리케이션 소스 코드와 배포 매니페스트를 별도 리포지토리로 분리하는 것이 권장됩니다. CI 파이프라인이 새 이미지를 빌드하면 매니페스트 리포지토리의 이미지 태그만 업데이트하고, ArgoCD가 변경을 감지하여 배포합니다.
+      </div>
+
+      <h3>ArgoCD + Kustomize 조합</h3>
+
+<pre><code># Kustomize 기반 환경별 오버레이 구조
+k8s-manifests/
+  apps/
+    my-app/
+      base/
+        deployment.yaml
+        service.yaml
+        kustomization.yaml
+      overlays/
+        dev/
+          kustomization.yaml    # 개발 환경 패치
+          replica-patch.yaml
+        staging/
+          kustomization.yaml
+        production/
+          kustomization.yaml    # 운영 환경 패치
+          replica-patch.yaml
+          resource-patch.yaml</code></pre>
+
+      <h2>Istio 서비스 메시</h2>
+
+      <p>마이크로서비스 간 통신이 복잡해지면 트래픽 관리, 보안, 관찰 가능성을 일관되게 적용하기 어렵습니다. Istio 서비스 메시는 사이드카 프록시(Envoy)를 통해 이 문제를 해결합니다.</p>
+
+      <h3>Istio의 핵심 기능</h3>
+      <ul>
+        <li><strong>트래픽 관리:</strong> 카나리 배포, A/B 테스팅, 가중치 기반 라우팅을 애플리케이션 코드 수정 없이 적용합니다</li>
+        <li><strong>mTLS 자동 적용:</strong> 서비스 간 통신을 자동으로 암호화하여 제로 트러스트 네트워크를 구현합니다</li>
+        <li><strong>분산 추적:</strong> Jaeger/Zipkin과 연동하여 요청 흐름을 추적합니다</li>
+        <li><strong>회로 차단기(Circuit Breaker):</strong> 장애 서비스로의 요청을 자동으로 차단하여 장애 전파를 방지합니다</li>
+      </ul>
+
+<pre><code># Istio VirtualService - 카나리 배포 설정
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: my-app
+  namespace: production
+spec:
+  hosts:
+    - my-app
+  http:
+    - match:
+        - headers:
+            x-canary:
+              exact: "true"
+      route:
+        - destination:
+            host: my-app
+            subset: canary
+    - route:
+        - destination:
+            host: my-app
+            subset: stable
+          weight: 90
+        - destination:
+            host: my-app
+            subset: canary
+          weight: 10
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: my-app
+  namespace: production
+spec:
+  host: my-app
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        h2UpgradePolicy: DEFAULT
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 100
+    outlierDetection:            # 회로 차단기
+      consecutive5xxErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+  subsets:
+    - name: stable
+      labels:
+        version: v2.1.0
+    - name: canary
+      labels:
+        version: v2.2.0</code></pre>
+
+      <h2>HPA/VPA 오토스케일링</h2>
+
+      <p>트래픽 패턴에 따라 자동으로 리소스를 조정하는 오토스케일링은 안정적인 서비스 운영과 비용 최적화의 핵심입니다.</p>
+
+      <h3>HPA (Horizontal Pod Autoscaler)</h3>
+      <p>Pod의 수를 자동으로 조정합니다. CPU/메모리 기본 메트릭 외에 커스텀 메트릭(요청 수, 큐 길이 등)도 활용할 수 있습니다.</p>
+
+<pre><code># HPA v2 - 커스텀 메트릭 기반 오토스케일링
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-server-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  minReplicas: 3
+  maxReplicas: 15
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300    # 축소 안정화 (5분)
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60              # 1분당 최대 10% 축소
+    scaleUp:
+      stabilizationWindowSeconds: 0      # 즉시 확장
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15              # 15초당 최대 100% 확장
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "1000"</code></pre>
+
+      <h3>VPA (Vertical Pod Autoscaler)</h3>
+      <p>Pod의 CPU/메모리 requests와 limits를 자동으로 조정합니다. 적절한 리소스 사이즈를 모를 때 유용합니다.</p>
+
+<pre><code># VPA 설정 - 추천 모드 (수동 적용)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: api-server-vpa
+  namespace: production
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  updatePolicy:
+    updateMode: "Off"          # 추천만 제공, 자동 적용 안 함
+  resourcePolicy:
+    containerPolicies:
+      - containerName: api-server
+        minAllowed:
+          cpu: 250m
+          memory: 256Mi
+        maxAllowed:
+          cpu: "2"
+          memory: 2Gi</code></pre>
+
+      <div class="warning-box">
+        <strong>HPA와 VPA 동시 사용 주의:</strong> 같은 리소스 메트릭(CPU/메모리)에 대해 HPA와 VPA를 동시에 사용하면 충돌이 발생합니다. HPA는 커스텀 메트릭(RPS 등)으로, VPA는 CPU/메모리로 분리하여 사용하거나, Multidimensional Pod Autoscaler(MPA)를 검토하세요.
+      </div>
+
+      <h2>비용 최적화와 FinOps</h2>
+
+      <p>클라우드 비용은 관리하지 않으면 빠르게 증가합니다. FinOps 관점에서 Kubernetes 비용을 최적화하는 전략을 살펴보겠습니다.</p>
+
+      <h3>비용 절감 전략</h3>
+      <ul>
+        <li><strong>리소스 Right-Sizing:</strong> VPA 추천값을 기반으로 과도하게 할당된 리소스를 줄입니다. 실제 사용량 대비 requests가 3배 이상이면 조정이 필요합니다.</li>
+        <li><strong>Spot/Preemptible 노드 활용:</strong> 상태 없는 워크로드는 Spot 인스턴스에서 실행하여 최대 90% 비용을 절감합니다. Pod Disruption Budget과 함께 사용하여 안정성을 확보합니다.</li>
+        <li><strong>네임스페이스별 Resource Quota:</strong> 팀별 리소스 사용량 상한을 설정하여 과도한 리소스 요청을 방지합니다.</li>
+        <li><strong>클러스터 오토스케일러:</strong> Karpenter(AWS) 또는 Cluster Autoscaler로 유휴 노드를 자동 축소하여 인프라 비용을 줄입니다.</li>
+      </ul>
+
+<pre><code># Karpenter NodePool - Spot 인스턴스 우선 사용
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    spec:
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot", "on-demand"]    # Spot 우선 사용
+        - key: node.kubernetes.io/instance-type
+          operator: In
+          values:
+            - m6i.large
+            - m6i.xlarge
+            - m7i.large
+            - c6i.large
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: default
+  limits:
+    cpu: "100"
+    memory: 200Gi
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 1m</code></pre>
+
+      <h2>모니터링: Prometheus + Grafana</h2>
+
+      <p>Kubernetes 클러스터와 애플리케이션의 상태를 실시간으로 파악하려면 체계적인 모니터링이 필수입니다.</p>
+
+      <h3>kube-prometheus-stack 설치</h3>
+
+<pre><code># Helm으로 Prometheus + Grafana 스택 설치
+helm repo add prometheus-community \
+  https://prometheus-community.github.io/helm-charts
+
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  -n monitoring \
+  --create-namespace \
+  --set grafana.adminPassword=securePassword \
+  --set prometheus.prometheusSpec.retention=30d \
+  --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=50Gi</code></pre>
+
+      <h3>핵심 모니터링 메트릭</h3>
+      <ul>
+        <li><strong>노드 레벨:</strong> CPU 사용률, 메모리 사용률, 디스크 I/O, 네트워크 처리량</li>
+        <li><strong>Pod 레벨:</strong> 재시작 횟수, OOMKilled 이벤트, 리소스 사용률 대비 requests/limits 비율</li>
+        <li><strong>애플리케이션 레벨:</strong> 요청 처리량(RPS), 응답 지연시간(P50/P95/P99), 에러율</li>
+        <li><strong>클러스터 레벨:</strong> 노드 수, 미스케줄링 Pod, PVC 사용량</li>
+      </ul>
+
+<pre><code># ServiceMonitor - 커스텀 애플리케이션 메트릭 수집
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: api-server-monitor
+  namespace: production
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: api-server
+  endpoints:
+    - port: metrics
+      path: /actuator/prometheus
+      interval: 15s
+  namespaceSelector:
+    matchNames:
+      - production</code></pre>
+
+      <div class="info-box">
+        <strong>알림 설정 팁:</strong> 알림 피로(Alert Fatigue)를 방지하려면 증상(symptom) 기반 알림을 설정하세요. CPU 사용률이 높다는 원인(cause) 대신, 응답 시간이 SLO를 초과했다는 증상으로 알림을 구성하면 실제로 조치가 필요한 상황에만 알림이 발생합니다.
+      </div>
+
+      <h2>실무 트러블슈팅 사례</h2>
+
+      <p>실제 운영에서 자주 마주치는 문제와 해결 방법을 공유합니다.</p>
+
+      <h3>사례 1: Pod가 Pending 상태에서 멈춤</h3>
+<pre><code># 원인 확인
+kubectl describe pod &lt;pod-name&gt; -n production
+
+# 흔한 원인들:
+# 1. 리소스 부족 - 노드에 충분한 CPU/메모리가 없음
+#    해결: 클러스터 오토스케일러 확인, requests 조정
+# 2. PVC 바인딩 실패 - 스토리지 프로비저닝 문제
+#    해결: StorageClass와 PVC 설정 확인
+# 3. nodeSelector/affinity 불일치
+#    해결: 라벨 매칭 확인
+
+# 전체 이벤트 확인
+kubectl get events -n production --sort-by='.lastTimestamp'</code></pre>
+
+      <h3>사례 2: 배포 후 간헐적 5xx 에러</h3>
+<pre><code># readinessProbe 설정 확인 - 준비되지 않은 Pod로 트래픽이 유입
+# 해결: initialDelaySeconds와 periodSeconds를 적절히 설정
+
+# 롤링 업데이트 시 graceful shutdown 보장
+spec:
+  template:
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: api-server
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 15"]
+          # preStop으로 새 요청 유입을 중단한 후
+          # 진행 중인 요청을 처리할 시간 확보</code></pre>
+
+      <h2>마무리</h2>
+
+      <p>Kubernetes는 강력한 플랫폼이지만, 프로덕션 수준의 운영에는 다양한 도구와 전략이 필요합니다. GitOps로 배포를 자동화하고, 서비스 메시로 트래픽을 관리하며, 오토스케일링과 FinOps로 비용을 최적화하는 것이 2026년 클라우드 네이티브 운영의 핵심입니다. 작은 규모부터 시작하여 점진적으로 도구를 도입하고, 운영 경험을 쌓아가는 것을 권장합니다.</p>
+
+      <div class="post-nav">
+        <a href="../index.html">&larr; 목록으로</a>
+      </div>
+    </article>
+
+    <div class="ad-container"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <div class="footer-links" style="margin-top: 0.5rem;">
+          <a href="https://jaeseong90.github.io/jaeseong90Folio" target="_blank">포트폴리오</a>
+          <a href="https://jaeseong90.github.io/homepage-game" target="_blank">게임</a>
+          <a href="https://jaeseong90.github.io/Toolry" target="_blank">Toolry</a>
+        </div>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
