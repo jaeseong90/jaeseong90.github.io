@@ -14,7 +14,7 @@
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <link rel="canonical" href="https://jaeseong90.github.io/posts/mybatis-to-jpa-migration.html">
 
-  <title>MyBatis에서 JPA로 점진적 마이그레이션 전략 | Jaeseong의 개발 블로그</title>
+  <title>MyBatis에서 JPA로 점진적 마이그레이션 전략 | 재성의 개발 블로그</title>
 
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
 
@@ -33,7 +33,6 @@
       <button class="menu-toggle" onclick="toggleMenu()">☰</button>
       <nav id="nav">
         <a href="../index.html">홈</a>
-        <a href="../categories.html">카테고리</a>
         <a href="../about.html">소개</a>
         <a href="../contact.html">연락처</a>
       </nav>
@@ -47,7 +46,7 @@
       <div class="post-meta">
         <span>2025.03.22</span>
         <span>13분 읽기</span>
-        <span>Jaeseong</span>
+        <span>재성</span>
       </div>
     </div>
   </section>
@@ -56,67 +55,6 @@
     <p>엔터프라이즈 환경에서 MyBatis는 오랫동안 데이터 접근 기술의 표준이었습니다. 하지만 새로운 모듈을 개발하면서 JPA의 생산성이 필요해지는 시점이 옵니다. 이 글에서는 기존 MyBatis를 유지하면서 JPA를 점진적으로 도입한 경험을 공유합니다.</p>
 
     <div class="ad-container"></div>
-
-    <!-- MyBatis vs JPA 아키텍처 비교 다이어그램 -->
-    <svg viewBox="0 0 800 420" width="100%" xmlns="http://www.w3.org/2000/svg" style="margin: 2rem 0; border-radius: 8px; background: #0f172a; padding: 1rem;">
-      <defs>
-        <marker id="arrow2" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-          <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
-        </marker>
-      </defs>
-      <!-- 제목 -->
-      <text x="400" y="30" text-anchor="middle" fill="#e2e8f0" font-size="16" font-weight="bold">MyBatis vs JPA 아키텍처 비교</text>
-
-      <!-- === 왼쪽: MyBatis === -->
-      <text x="200" y="60" text-anchor="middle" fill="#f59e0b" font-size="14" font-weight="bold">MyBatis 방식</text>
-      <!-- Service -->
-      <rect x="115" y="75" width="170" height="45" rx="8" fill="#3b82f6"/>
-      <text x="200" y="103" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Service 계층</text>
-      <line x1="200" y1="120" x2="200" y2="140" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
-      <!-- Mapper -->
-      <rect x="115" y="145" width="170" height="45" rx="8" fill="#f59e0b"/>
-      <text x="200" y="173" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Mapper 인터페이스</text>
-      <line x1="200" y1="190" x2="200" y2="210" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
-      <!-- XML -->
-      <rect x="115" y="215" width="170" height="45" rx="8" fill="#ef4444"/>
-      <text x="200" y="235" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">XML SQL 매핑</text>
-      <text x="200" y="251" text-anchor="middle" fill="#fecaca" font-size="10">직접 SQL 작성</text>
-      <line x1="200" y1="260" x2="200" y2="280" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
-      <!-- JDBC -->
-      <rect x="115" y="285" width="170" height="40" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
-      <text x="200" y="310" text-anchor="middle" fill="#94a3b8" font-size="12">JDBC / DataSource</text>
-
-      <!-- === 구분선 === -->
-      <line x1="400" y1="55" x2="400" y2="400" stroke="#334155" stroke-width="1" stroke-dasharray="6,4"/>
-      <text x="400" y="408" text-anchor="middle" fill="#475569" font-size="11">동일 DataSource 공유 가능</text>
-
-      <!-- === 오른쪽: JPA === -->
-      <text x="600" y="60" text-anchor="middle" fill="#10b981" font-size="14" font-weight="bold">JPA 방식</text>
-      <!-- Service -->
-      <rect x="515" y="75" width="170" height="45" rx="8" fill="#3b82f6"/>
-      <text x="600" y="103" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Service 계층</text>
-      <line x1="600" y1="120" x2="600" y2="140" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
-      <!-- Repository -->
-      <rect x="515" y="145" width="170" height="45" rx="8" fill="#10b981"/>
-      <text x="600" y="173" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">JPA Repository</text>
-      <line x1="600" y1="190" x2="600" y2="210" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
-      <!-- EntityManager -->
-      <rect x="515" y="215" width="170" height="45" rx="8" fill="#8b5cf6"/>
-      <text x="600" y="235" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">영속성 컨텍스트</text>
-      <text x="600" y="251" text-anchor="middle" fill="#ddd6fe" font-size="10">자동 SQL 생성</text>
-      <line x1="600" y1="260" x2="600" y2="280" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
-      <!-- JDBC -->
-      <rect x="515" y="285" width="170" height="40" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
-      <text x="600" y="310" text-anchor="middle" fill="#94a3b8" font-size="12">JDBC / DataSource</text>
-
-      <!-- 하단 DB (공유) -->
-      <line x1="200" y1="325" x2="200" y2="355" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
-      <line x1="600" y1="325" x2="600" y2="355" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
-      <rect x="250" y="355" width="300" height="40" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
-      <text x="400" y="380" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="bold">Database (MSSQL)</text>
-      <line x1="250" y1="375" x2="200" y2="375" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
-      <line x1="550" y1="375" x2="600" y2="375" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
-    </svg>
 
     <h2>MyBatis와 JPA의 공존이 가능한가?</h2>
 
@@ -320,13 +258,12 @@ public void batchInsert(List&lt;Item&gt; items) {
     <div class="container">
       <div class="footer-content">
         <div class="footer-links">
-          <a href="../categories.html">카테고리</a>
-        <a href="../about.html">소개</a>
+          <a href="../about.html">소개</a>
           <a href="../privacy.html">개인정보처리방침</a>
           <a href="../terms.html">이용약관</a>
           <a href="../contact.html">연락처</a>
         </div>
-        <p class="copyright">&copy; 2025 Jaeseong의 개발 블로그. All rights reserved.</p>
+        <p class="copyright">&copy; 2025 재성의 개발 블로그. All rights reserved.</p>
       </div>
     </div>
   </footer>

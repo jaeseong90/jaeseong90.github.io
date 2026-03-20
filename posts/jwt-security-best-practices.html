@@ -55,6 +55,95 @@
       <!-- 광고 영역 -->
     </div>
 
+    <!-- JWT 인증 흐름 다이어그램 -->
+    <svg viewBox="0 0 800 480" width="100%" xmlns="http://www.w3.org/2000/svg" style="margin: 2rem 0; border-radius: 8px; background: #0f172a; padding: 1rem;">
+      <defs>
+        <marker id="jwtArrow" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+        </marker>
+        <marker id="jwtArrowGreen" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+        </marker>
+        <marker id="jwtArrowRed" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+        </marker>
+      </defs>
+      <!-- 제목 -->
+      <text x="400" y="30" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="bold">JWT 인증 흐름 아키텍처</text>
+      <!-- 클라이언트 -->
+      <rect x="30" y="60" width="160" height="400" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+      <rect x="40" y="65" width="140" height="30" rx="6" fill="#3b82f6"/>
+      <text x="110" y="85" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">클라이언트</text>
+      <rect x="45" y="110" width="130" height="40" rx="6" fill="#1e3a5f"/>
+      <text x="110" y="127" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="bold">브라우저/앱</text>
+      <text x="110" y="142" text-anchor="middle" fill="#64748b" font-size="9">사용자 인터페이스</text>
+      <!-- Spring Boot 서버 -->
+      <rect x="280" y="60" width="240" height="400" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+      <rect x="290" y="65" width="220" height="30" rx="6" fill="#10b981"/>
+      <text x="400" y="85" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Spring Boot 서버</text>
+      <!-- 서버 내부 컴포넌트 -->
+      <rect x="295" y="110" width="210" height="45" rx="6" fill="#1a3a2a"/>
+      <text x="400" y="130" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="bold">Security Filter Chain</text>
+      <text x="400" y="147" text-anchor="middle" fill="#64748b" font-size="9">JWT 토큰 검증 필터</text>
+      <rect x="295" y="168" width="210" height="45" rx="6" fill="#1a3a2a"/>
+      <text x="400" y="188" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="bold">JwtTokenProvider</text>
+      <text x="400" y="205" text-anchor="middle" fill="#64748b" font-size="9">토큰 생성/검증/파싱</text>
+      <rect x="295" y="226" width="210" height="45" rx="6" fill="#1a3a2a"/>
+      <text x="400" y="246" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="bold">UserDetailsService</text>
+      <text x="400" y="263" text-anchor="middle" fill="#64748b" font-size="9">사용자 인증 정보 조회</text>
+      <rect x="295" y="284" width="100" height="45" rx="6" fill="#1a3a2a"/>
+      <text x="345" y="304" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="bold">Access Token</text>
+      <text x="345" y="319" text-anchor="middle" fill="#64748b" font-size="9">만료: 30분</text>
+      <rect x="405" y="284" width="100" height="45" rx="6" fill="#1a3a2a"/>
+      <text x="455" y="304" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="bold">Refresh Token</text>
+      <text x="455" y="319" text-anchor="middle" fill="#64748b" font-size="9">만료: 7일</text>
+      <rect x="295" y="342" width="210" height="45" rx="6" fill="#1a3a2a"/>
+      <text x="400" y="362" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="bold">PasswordEncoder</text>
+      <text x="400" y="379" text-anchor="middle" fill="#64748b" font-size="9">BCrypt 비밀번호 검증</text>
+      <!-- 데이터베이스 -->
+      <rect x="610" y="60" width="160" height="180" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+      <rect x="620" y="65" width="140" height="30" rx="6" fill="#f59e0b"/>
+      <text x="690" y="85" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">데이터베이스</text>
+      <rect x="625" y="110" width="130" height="40" rx="6" fill="#3a2a1a"/>
+      <text x="690" y="127" text-anchor="middle" fill="#fcd34d" font-size="10" font-weight="bold">사용자 테이블</text>
+      <text x="690" y="142" text-anchor="middle" fill="#64748b" font-size="9">ID, 비밀번호(해시), 권한</text>
+      <rect x="625" y="163" width="130" height="40" rx="6" fill="#3a2a1a"/>
+      <text x="690" y="180" text-anchor="middle" fill="#fcd34d" font-size="10" font-weight="bold">토큰 블랙리스트</text>
+      <text x="690" y="195" text-anchor="middle" fill="#64748b" font-size="9">무효화된 토큰 관리</text>
+      <!-- 흐름 화살표 -->
+      <!-- 1. 로그인 요청 -->
+      <line x1="190" y1="120" x2="290" y2="120" stroke="#3b82f6" stroke-width="2" marker-end="url(#jwtArrow)"/>
+      <text x="240" y="113" text-anchor="middle" fill="#93c5fd" font-size="9" font-weight="bold">1. 로그인 요청</text>
+      <text x="240" y="135" text-anchor="middle" fill="#64748b" font-size="8">(ID + 비밀번호)</text>
+      <!-- 2. DB 조회 -->
+      <line x1="510" y1="135" x2="620" y2="135" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#jwtArrow)"/>
+      <text x="565" y="128" text-anchor="middle" fill="#fbbf24" font-size="9">2. 사용자 조회</text>
+      <!-- 3. 토큰 발급 -->
+      <line x1="290" y1="200" x2="190" y2="200" stroke="#10b981" stroke-width="2" marker-end="url(#jwtArrowGreen)"/>
+      <text x="240" y="193" text-anchor="middle" fill="#6ee7b7" font-size="9" font-weight="bold">3. JWT 토큰 발급</text>
+      <text x="240" y="215" text-anchor="middle" fill="#64748b" font-size="8">(Access + Refresh)</text>
+      <!-- 4. API 요청 -->
+      <line x1="190" y1="310" x2="290" y2="310" stroke="#8b5cf6" stroke-width="2" marker-end="url(#jwtArrow)"/>
+      <text x="240" y="300" text-anchor="middle" fill="#c4b5fd" font-size="9" font-weight="bold">4. API 요청</text>
+      <text x="240" y="325" text-anchor="middle" fill="#64748b" font-size="8">(Authorization: Bearer ...)</text>
+      <!-- 5. 토큰 검증 성공/실패 -->
+      <line x1="290" y1="370" x2="190" y2="370" stroke="#10b981" stroke-width="2" marker-end="url(#jwtArrowGreen)"/>
+      <text x="240" y="360" text-anchor="middle" fill="#6ee7b7" font-size="9">5a. 검증 성공 → 응답</text>
+      <line x1="290" y1="415" x2="190" y2="415" stroke="#ef4444" stroke-width="2" marker-end="url(#jwtArrowRed)" stroke-dasharray="5,3"/>
+      <text x="240" y="405" text-anchor="middle" fill="#fca5a5" font-size="9">5b. 검증 실패 → 401</text>
+      <!-- 보안 체크리스트 -->
+      <rect x="610" y="270" width="170" height="190" rx="12" fill="#1e293b" stroke="#ef4444" stroke-width="2"/>
+      <rect x="620" y="275" width="150" height="28" rx="6" fill="#ef4444"/>
+      <text x="695" y="294" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">보안 체크리스트</text>
+      <text x="625" y="322" fill="#fca5a5" font-size="10">&#x2713; Secret Key 외부 관리</text>
+      <text x="625" y="342" fill="#fca5a5" font-size="10">&#x2713; 256bit 이상 키 길이</text>
+      <text x="625" y="362" fill="#fca5a5" font-size="10">&#x2713; 알고리즘 명시적 지정</text>
+      <text x="625" y="382" fill="#fca5a5" font-size="10">&#x2713; 적절한 만료 시간</text>
+      <text x="625" y="402" fill="#fca5a5" font-size="10">&#x2713; Payload 최소 정보</text>
+      <text x="625" y="422" fill="#fca5a5" font-size="10">&#x2713; Refresh Token 전략</text>
+      <text x="625" y="442" fill="#fca5a5" font-size="10">&#x2713; 토큰 무효화 방법</text>
+    </svg>
+
     <h2>흔한 JWT 보안 실수들</h2>
 
     <h3>1. 하드코딩된 Secret Key</h3>
