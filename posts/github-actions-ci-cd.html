@@ -33,6 +33,7 @@
       <button class="menu-toggle" onclick="toggleMenu()">☰</button>
       <nav id="nav">
         <a href="../index.html">홈</a>
+        <a href="../categories.html">카테고리</a>
         <a href="../about.html">소개</a>
         <a href="../contact.html">연락처</a>
       </nav>
@@ -66,6 +67,68 @@
       <li><strong>마켓플레이스:</strong> 커뮤니티가 만든 수천 개의 재사용 가능한 Action 존재</li>
       <li><strong>매트릭스 빌드:</strong> 여러 OS, JDK 버전 조합을 병렬로 테스트 가능</li>
     </ul>
+
+    <!-- CI/CD 파이프라인 흐름도 -->
+    <svg viewBox="0 0 800 320" width="100%" xmlns="http://www.w3.org/2000/svg" style="margin: 2rem 0; border-radius: 8px; background: #0f172a; padding: 1rem;">
+      <defs>
+        <marker id="arrow1" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+        </marker>
+      </defs>
+      <!-- 제목 -->
+      <text x="400" y="30" text-anchor="middle" fill="#e2e8f0" font-size="16" font-weight="bold">CI/CD 파이프라인 전체 흐름</text>
+      <!-- Push -->
+      <rect x="20" y="60" width="120" height="60" rx="8" fill="#8b5cf6"/>
+      <text x="80" y="88" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Git Push</text>
+      <text x="80" y="106" text-anchor="middle" fill="#e2e8f0" font-size="11">코드 커밋</text>
+      <!-- Arrow -->
+      <line x1="140" y1="90" x2="180" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow1)"/>
+      <!-- Build -->
+      <rect x="185" y="60" width="120" height="60" rx="8" fill="#3b82f6"/>
+      <text x="245" y="88" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Build</text>
+      <text x="245" y="106" text-anchor="middle" fill="#e2e8f0" font-size="11">Gradle 빌드</text>
+      <!-- Arrow -->
+      <line x1="305" y1="90" x2="345" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow1)"/>
+      <!-- Test -->
+      <rect x="350" y="60" width="120" height="60" rx="8" fill="#f59e0b"/>
+      <text x="410" y="88" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Test</text>
+      <text x="410" y="106" text-anchor="middle" fill="#e2e8f0" font-size="11">단위/통합 테스트</text>
+      <!-- Arrow -->
+      <line x1="470" y1="90" x2="510" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow1)"/>
+      <!-- Docker -->
+      <rect x="515" y="60" width="120" height="60" rx="8" fill="#10b981"/>
+      <text x="575" y="88" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Docker Build</text>
+      <text x="575" y="106" text-anchor="middle" fill="#e2e8f0" font-size="11">이미지 생성</text>
+      <!-- Arrow -->
+      <line x1="635" y1="90" x2="675" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow1)"/>
+      <!-- Deploy -->
+      <rect x="680" y="60" width="100" height="60" rx="8" fill="#ef4444"/>
+      <text x="730" y="88" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Deploy</text>
+      <text x="730" y="106" text-anchor="middle" fill="#e2e8f0" font-size="11">운영 배포</text>
+
+      <!-- 하단: 환경별 배포 단계 -->
+      <text x="400" y="170" text-anchor="middle" fill="#94a3b8" font-size="13">환경별 단계적 배포</text>
+      <!-- Staging -->
+      <rect x="150" y="190" width="150" height="55" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+      <text x="225" y="215" text-anchor="middle" fill="#3b82f6" font-size="13" font-weight="bold">Staging 배포</text>
+      <text x="225" y="233" text-anchor="middle" fill="#94a3b8" font-size="11">자동 배포</text>
+      <!-- Arrow -->
+      <line x1="300" y1="218" x2="340" y2="218" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow1)"/>
+      <!-- Approval -->
+      <rect x="345" y="190" width="120" height="55" rx="25" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="405" y="215" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="bold">승인 대기</text>
+      <text x="405" y="233" text-anchor="middle" fill="#94a3b8" font-size="11">수동 승인</text>
+      <!-- Arrow -->
+      <line x1="465" y1="218" x2="505" y2="218" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow1)"/>
+      <!-- Production -->
+      <rect x="510" y="190" width="150" height="55" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+      <text x="585" y="215" text-anchor="middle" fill="#10b981" font-size="13" font-weight="bold">Production 배포</text>
+      <text x="585" y="233" text-anchor="middle" fill="#94a3b8" font-size="11">승인 후 배포</text>
+
+      <!-- Slack 알림 -->
+      <rect x="300" y="270" width="210" height="40" rx="8" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="405" y="295" text-anchor="middle" fill="#8b5cf6" font-size="12">Slack 알림 (성공/실패)</text>
+    </svg>
 
     <h2>기본 CI 워크플로우 구성</h2>
 
@@ -274,7 +337,8 @@ env:
     <div class="container">
       <div class="footer-content">
         <div class="footer-links">
-          <a href="../about.html">소개</a>
+          <a href="../categories.html">카테고리</a>
+        <a href="../about.html">소개</a>
           <a href="../privacy.html">개인정보처리방침</a>
           <a href="../terms.html">이용약관</a>
           <a href="../contact.html">연락처</a>

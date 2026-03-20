@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OpenTelemetry로 분산 시스템의 관측성을 구축하는 실전 가이드. Traces, Metrics, Logs 통합부터 Jaeger, Grafana 대시보드 구성까지 다룹니다.">
+  <meta name="keywords" content="OpenTelemetry, 관측성, 분산 추적, Jaeger, Grafana, Spring Boot, 모니터링">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="OpenTelemetry로 분산 시스템 관측성 구축하기: 실전 가이드">
+  <meta property="og:description" content="OpenTelemetry로 분산 시스템의 관측성을 구축하는 실전 가이드. Traces, Metrics, Logs 통합부터 Jaeger, Grafana 대시보드 구성까지 다룹니다.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/opentelemetry-observability-guide.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/opentelemetry-observability-guide.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+  <title>OpenTelemetry로 분산 시스템 관측성 구축하기: 실전 가이드 | Jaeseong의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../categories.html">카테고리</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">DevOps</span>
+      <h1>OpenTelemetry로 분산 시스템 관측성 구축하기: 실전 가이드</h1>
+      <div class="post-meta">
+        <span>2026.03.15</span>
+        <span>13분 읽기</span>
+        <span>Jaeseong</span>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="ad-container"></div>
+
+    <article class="post-content">
+      <p>마이크로서비스 아키텍처가 보편화되면서 서비스 간 호출이 복잡해지고, 장애의 원인을 파악하기가 점점 어려워지고 있습니다. 기존의 단순한 로그 수집이나 메트릭 모니터링만으로는 분산 시스템의 동작을 이해하기 어렵습니다. OpenTelemetry는 Traces, Metrics, Logs 세 가지 신호를 통합하여 진정한 관측성(Observability)을 제공하는 오픈소스 프레임워크입니다. 이 글에서는 Spring Boot 기반 프로젝트에 OpenTelemetry를 적용하는 전 과정을 다룹니다.</p>
+
+      <h2>관측성(Observability)이란?</h2>
+
+      <p>관측성은 시스템의 외부 출력을 통해 내부 상태를 이해할 수 있는 능력을 말합니다. 기존 모니터링이 "무엇이 문제인가"에 집중했다면, 관측성은 "왜 문제가 발생했는가"에 답할 수 있어야 합니다.</p>
+
+      <h3>기존 모니터링 vs 관측성</h3>
+
+      <ul>
+        <li><strong>기존 모니터링:</strong> 미리 정의된 메트릭과 임계값 기반으로 알림을 발생시킵니다. 예상된 문제에 대한 대응에 적합합니다.</li>
+        <li><strong>관측성:</strong> 구조화된 데이터를 기반으로 이전에 경험하지 못한 문제도 탐색하고 원인을 파악할 수 있습니다. 예측하지 못한 문제에 대한 디버깅이 가능합니다.</li>
+      </ul>
+
+      <div class="info-box">
+        <strong>관측성의 3대 신호(Three Pillars):</strong> Traces(분산 추적), Metrics(수치 지표), Logs(로그 데이터). OpenTelemetry는 이 세 가지를 하나의 프레임워크로 통합합니다.
+      </div>
+
+      <h2>OpenTelemetry 핵심 개념</h2>
+
+      <p>OpenTelemetry(OTel)는 CNCF에서 관리하는 관측성 프레임워크로, 벤더에 종속되지 않는 텔레메트리 데이터 수집 표준을 제공합니다.</p>
+
+      <h3>아키텍처 구성 요소</h3>
+
+      <pre><code>┌─────────────────────────────────────────────────────┐
+│                    Application                       │
+│  ┌─────────┐  ┌──────────┐  ┌─────────────────┐    │
+│  │  OTel   │  │  OTel    │  │   OTel Log      │    │
+│  │  Tracer │  │  Meter   │  │   Provider      │    │
+│  └────┬────┘  └────┬─────┘  └───────┬─────────┘    │
+│       └─────────────┼───────────────┘               │
+│                     ▼                                │
+│           OTel SDK (Exporter)                        │
+└─────────────────────┬───────────────────────────────┘
+                      ▼
+            OTel Collector (선택)
+            ┌─────────────────┐
+            │  Receivers      │
+            │  Processors     │
+            │  Exporters      │
+            └───────┬─────────┘
+        ┌───────────┼───────────┐
+        ▼           ▼           ▼
+    Jaeger/Tempo  Prometheus   Loki
+    (Traces)      (Metrics)    (Logs)</code></pre>
+
+      <h3>주요 용어 정리</h3>
+
+      <ul>
+        <li><strong>Span:</strong> 하나의 작업 단위를 나타냅니다. 시작 시간, 종료 시간, 속성, 이벤트 등을 포함합니다.</li>
+        <li><strong>Trace:</strong> 여러 Span으로 구성된 하나의 요청 흐름입니다. 분산 시스템에서 서비스 간 호출 경로를 추적합니다.</li>
+        <li><strong>Metric:</strong> 시간에 따른 수치 데이터입니다. Counter, Gauge, Histogram 등의 유형이 있습니다.</li>
+        <li><strong>Context Propagation:</strong> 서비스 간 호출 시 Trace 정보를 전파하는 메커니즘입니다.</li>
+        <li><strong>Collector:</strong> 텔레메트리 데이터를 수집, 처리, 내보내는 독립 실행형 프록시입니다.</li>
+      </ul>
+
+      <h2>Spring Boot에 OpenTelemetry 통합하기</h2>
+
+      <h3>의존성 추가</h3>
+
+      <p>Spring Boot 3.x에서는 Micrometer Tracing을 통해 OpenTelemetry를 쉽게 통합할 수 있습니다.</p>
+
+      <pre><code>// build.gradle.kts
+dependencies {
+    // Spring Boot Actuator
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // OpenTelemetry - 분산 추적
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
+
+    // OpenTelemetry - 자동 계측
+    implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter:2.12.0")
+
+    // Prometheus 메트릭 내보내기
+    implementation("io.micrometer:micrometer-registry-prometheus")
+}</code></pre>
+
+      <h3>application.yml 설정</h3>
+
+      <pre><code>spring:
+  application:
+    name: order-service
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0  # 개발 환경: 100% 샘플링
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+    metrics:
+      endpoint: http://localhost:4318/v1/metrics
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+
+otel:
+  resource:
+    attributes:
+      service.name: order-service
+      service.version: 1.0.0
+      deployment.environment: development</code></pre>
+
+      <div class="warning-box">
+        <strong>프로덕션 환경 주의:</strong> 샘플링 비율을 1.0(100%)으로 설정하면 모든 요청이 추적되어 성능에 영향을 줄 수 있습니다. 프로덕션에서는 0.1~0.3(10~30%) 정도가 적절합니다.
+      </div>
+
+      <h2>자동 계측 vs 수동 계측</h2>
+
+      <h3>자동 계측 (Zero-Code Instrumentation)</h3>
+
+      <p>OpenTelemetry Java Agent를 사용하면 코드 변경 없이 대부분의 라이브러리에 대해 자동으로 계측이 적용됩니다.</p>
+
+      <pre><code># Java Agent로 실행
+java -javaagent:opentelemetry-javaagent.jar \
+  -Dotel.service.name=order-service \
+  -Dotel.exporter.otlp.endpoint=http://collector:4317 \
+  -Dotel.traces.sampler=parentbased_traceidratio \
+  -Dotel.traces.sampler.arg=0.3 \
+  -jar order-service.jar</code></pre>
+
+      <p>자동 계측이 지원하는 주요 라이브러리:</p>
+
+      <ul>
+        <li>Spring MVC / WebFlux - HTTP 요청/응답</li>
+        <li>Spring Data JPA - 데이터베이스 쿼리</li>
+        <li>RestTemplate / WebClient - HTTP 클라이언트 호출</li>
+        <li>Kafka, RabbitMQ - 메시지 브로커</li>
+        <li>Redis, MongoDB - 데이터 저장소</li>
+      </ul>
+
+      <h3>수동 계측 (Manual Instrumentation)</h3>
+
+      <p>비즈니스 로직에 대한 세밀한 추적이 필요한 경우 수동 계측을 사용합니다.</p>
+
+      <pre><code>import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
+
+@Service
+public class OrderService {
+
+    private final Tracer tracer = GlobalOpenTelemetry.getTracer("order-service");
+
+    public Order createOrder(OrderRequest request) {
+        Span span = tracer.spanBuilder("createOrder")
+            .setAttribute("order.customer_id", request.getCustomerId())
+            .setAttribute("order.item_count", request.getItems().size())
+            .startSpan();
+
+        try (Scope scope = span.makeCurrent()) {
+            // 재고 확인
+            Span stockSpan = tracer.spanBuilder("checkStock")
+                .startSpan();
+            try (Scope stockScope = stockSpan.makeCurrent()) {
+                checkStockAvailability(request.getItems());
+                stockSpan.setAttribute("stock.all_available", true);
+            } catch (Exception e) {
+                stockSpan.setStatus(StatusCode.ERROR, e.getMessage());
+                stockSpan.recordException(e);
+                throw e;
+            } finally {
+                stockSpan.end();
+            }
+
+            // 주문 저장
+            Order order = orderRepository.save(toEntity(request));
+            span.setAttribute("order.id", order.getId());
+            span.setAttribute("order.total_amount", order.getTotalAmount());
+
+            // 이벤트 기록
+            span.addEvent("order_created", Attributes.of(
+                AttributeKey.longKey("order_id"), order.getId()
+            ));
+
+            return order;
+        } catch (Exception e) {
+            span.setStatus(StatusCode.ERROR, "주문 생성 실패");
+            span.recordException(e);
+            throw e;
+        } finally {
+            span.end();
+        }
+    }
+}</code></pre>
+
+      <h2>Jaeger와 Tempo로 분산 추적 시각화</h2>
+
+      <h3>Docker Compose로 인프라 구성</h3>
+
+      <pre><code>version: '3.8'
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    ports:
+      - "4317:4317"   # gRPC
+      - "4318:4318"   # HTTP
+      - "8889:8889"   # Prometheus exporter
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml
+    depends_on:
+      - tempo
+      - loki
+
+  tempo:
+    image: grafana/tempo:2.4.0
+    ports:
+      - "3200:3200"   # Tempo API
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo/config.yaml
+    command: ["-config.file=/etc/tempo/config.yaml"]
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  loki:
+    image: grafana/loki:2.9.0
+    ports:
+      - "3100:3100"
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml</code></pre>
+
+      <h3>OTel Collector 설정</h3>
+
+      <pre><code># otel-collector-config.yaml
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+  attributes:
+    actions:
+      - key: environment
+        value: production
+        action: upsert
+
+exporters:
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  prometheus:
+    endpoint: 0.0.0.0:8889
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, attributes]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [loki]</code></pre>
+
+      <h2>커스텀 메트릭 수집</h2>
+
+      <p>비즈니스에 특화된 메트릭을 직접 정의하여 수집할 수 있습니다.</p>
+
+      <pre><code>import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.common.Attributes;
+
+@Component
+public class OrderMetrics {
+
+    private final LongCounter orderCounter;
+    private final DoubleHistogram orderAmountHistogram;
+    private final LongCounter orderFailureCounter;
+
+    public OrderMetrics() {
+        Meter meter = GlobalOpenTelemetry.getMeter("order-service");
+
+        this.orderCounter = meter.counterBuilder("orders.created.total")
+            .setDescription("주문 생성 총 건수")
+            .setUnit("1")
+            .build();
+
+        this.orderAmountHistogram = meter.histogramBuilder("orders.amount")
+            .setDescription("주문 금액 분포")
+            .setUnit("KRW")
+            .setExplicitBucketBoundariesAdvice(
+                List.of(10000.0, 50000.0, 100000.0, 500000.0, 1000000.0)
+            )
+            .build();
+
+        this.orderFailureCounter = meter.counterBuilder("orders.failed.total")
+            .setDescription("주문 실패 총 건수")
+            .build();
+    }
+
+    public void recordOrderCreated(String paymentMethod, double amount) {
+        Attributes attrs = Attributes.of(
+            AttributeKey.stringKey("payment.method"), paymentMethod
+        );
+        orderCounter.add(1, attrs);
+        orderAmountHistogram.record(amount, attrs);
+    }
+
+    public void recordOrderFailed(String reason) {
+        Attributes attrs = Attributes.of(
+            AttributeKey.stringKey("failure.reason"), reason
+        );
+        orderFailureCounter.add(1, attrs);
+    }
+}</code></pre>
+
+      <h2>로그 상관관계: Trace ID 연동</h2>
+
+      <p>로그에 Trace ID를 포함시키면, 특정 요청의 로그만 필터링하여 문제를 빠르게 추적할 수 있습니다.</p>
+
+      <h3>Logback 설정으로 Trace ID 자동 삽입</h3>
+
+      <pre><code>&lt;!-- logback-spring.xml --&gt;
+&lt;configuration&gt;
+  &lt;appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender"&gt;
+    &lt;encoder&gt;
+      &lt;pattern&gt;
+        %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36}
+        [traceId=%X{trace_id} spanId=%X{span_id}] - %msg%n
+      &lt;/pattern&gt;
+    &lt;/encoder&gt;
+  &lt;/appender&gt;
+
+  &lt;appender name="JSON" class="ch.qos.logback.core.ConsoleAppender"&gt;
+    &lt;encoder class="net.logstash.logback.encoder.LogstashEncoder"&gt;
+      &lt;provider class="net.logstash.logback.composite.loggingevent.MdcJsonProvider"/&gt;
+    &lt;/encoder&gt;
+  &lt;/appender&gt;
+
+  &lt;root level="INFO"&gt;
+    &lt;appender-ref ref="JSON" /&gt;
+  &lt;/root&gt;
+&lt;/configuration&gt;</code></pre>
+
+      <p>이 설정으로 출력되는 로그 예시:</p>
+
+      <pre><code>{
+  "timestamp": "2026-03-15T10:23:45.123Z",
+  "level": "INFO",
+  "logger": "com.example.OrderService",
+  "message": "주문 생성 완료: orderId=12345",
+  "trace_id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+  "span_id": "1a2b3c4d5e6f7a8b",
+  "service.name": "order-service"
+}</code></pre>
+
+      <div class="info-box">
+        <strong>Grafana에서 로그 &rarr; 트레이스 연동:</strong> Grafana의 Loki 데이터 소스 설정에서 "Derived fields"를 구성하면, 로그의 trace_id 필드를 클릭하여 바로 Tempo의 트레이스 뷰로 이동할 수 있습니다.
+      </div>
+
+      <h2>Grafana 대시보드 구성</h2>
+
+      <h3>데이터 소스 자동 프로비저닝</h3>
+
+      <pre><code># grafana-datasources.yaml
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        filterByTraceID: true
+      tracesToMetrics:
+        datasourceUid: prometheus
+
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: '"trace_id":"(\w+)"'
+          name: TraceID
+          url: '$${__value.raw}'</code></pre>
+
+      <h3>RED 메트릭 대시보드</h3>
+
+      <p>서비스 모니터링의 핵심은 RED(Rate, Errors, Duration) 메트릭입니다. Grafana에서 다음 PromQL 쿼리로 대시보드를 구성합니다.</p>
+
+      <pre><code># Rate: 초당 요청 수
+rate(http_server_request_duration_seconds_count{service_name="order-service"}[5m])
+
+# Errors: 에러율 (%)
+100 * sum(rate(http_server_request_duration_seconds_count{
+  service_name="order-service", http_response_status_code=~"5.."}[5m]))
+/ sum(rate(http_server_request_duration_seconds_count{
+  service_name="order-service"}[5m]))
+
+# Duration: p99 응답 시간
+histogram_quantile(0.99,
+  sum(rate(http_server_request_duration_seconds_bucket{
+    service_name="order-service"}[5m])) by (le)
+)</code></pre>
+
+      <h2>실무 트러블슈팅 사례</h2>
+
+      <h3>사례 1: 간헐적 타임아웃 추적</h3>
+
+      <p>주문 API에서 간헐적으로 5초 이상 소요되는 요청이 발생했습니다. 기존 로그만으로는 원인 파악이 어려웠지만, 분산 추적으로 해결했습니다.</p>
+
+      <pre><code># Tempo에서 느린 트레이스 검색
+# TraceQL 쿼리
+{ span.http.route = "/api/orders" && duration > 5s }
+
+# 결과: payment-service -> external-pg API 호출에서 병목 발견
+# Span 상세:
+#   service: payment-service
+#   operation: POST /pg/approve
+#   duration: 4.8s
+#   attributes:
+#     pg.provider: "nice-pay"
+#     pg.retry_count: 2</code></pre>
+
+      <p>분석 결과, 특정 PG사의 응답 지연이 원인이었으며, 서킷 브레이커 적용으로 해결했습니다.</p>
+
+      <h3>사례 2: N+1 쿼리 발견</h3>
+
+      <pre><code># 트레이스에서 반복적인 DB Span 패턴 발견
+Trace: GET /api/orders?page=1
+  ├─ SELECT * FROM orders LIMIT 20          (2ms)
+  ├─ SELECT * FROM order_items WHERE order_id = 1  (1ms)
+  ├─ SELECT * FROM order_items WHERE order_id = 2  (1ms)
+  ├─ SELECT * FROM order_items WHERE order_id = 3  (1ms)
+  │  ... (20개 반복)
+  └─ 총 DB Span: 21개, 총 소요: 45ms
+
+# 해결: Fetch Join 적용 후
+Trace: GET /api/orders?page=1
+  ├─ SELECT o.*, oi.* FROM orders o JOIN order_items oi ...  (5ms)
+  └─ 총 DB Span: 1개, 총 소요: 5ms</code></pre>
+
+      <h2>성능 영향 최소화 팁</h2>
+
+      <p>OpenTelemetry 도입 시 성능 영향을 최소화하기 위한 실전 팁입니다.</p>
+
+      <h3>샘플링 전략</h3>
+
+      <pre><code># 부모 기반 + 비율 기반 샘플링
+otel.traces.sampler=parentbased_traceidratio
+otel.traces.sampler.arg=0.1
+
+# Tail-based 샘플링 (Collector에서 처리)
+# otel-collector-config.yaml
+processors:
+  tail_sampling:
+    decision_wait: 10s
+    policies:
+      # 에러가 발생한 트레이스는 항상 수집
+      - name: error-policy
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      # 느린 요청은 항상 수집
+      - name: latency-policy
+        type: latency
+        latency:
+          threshold_ms: 3000
+      # 나머지는 10%만 수집
+      - name: probabilistic-policy
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10</code></pre>
+
+      <h3>성능 최적화 체크리스트</h3>
+
+      <ul>
+        <li><strong>배치 처리:</strong> Span을 개별 전송하지 않고 배치로 묶어 전송합니다. 기본 배치 크기는 512이며, 타임아웃은 5초입니다.</li>
+        <li><strong>비동기 전송:</strong> Exporter는 비동기로 동작하여 애플리케이션 스레드를 블로킹하지 않습니다.</li>
+        <li><strong>메모리 제한:</strong> Collector의 memory_limiter 프로세서로 OOM을 방지합니다.</li>
+        <li><strong>속성 수 제한:</strong> Span당 속성 수를 128개 이하로 유지합니다. 불필요한 속성은 제거합니다.</li>
+        <li><strong>Collector 분리 배포:</strong> 애플리케이션과 Collector를 별도로 배포하여 장애 격리를 확보합니다.</li>
+      </ul>
+
+      <div class="warning-box">
+        <strong>성능 측정 결과:</strong> 자동 계측 활성화 시 평균 3~5%의 CPU 오버헤드가 발생합니다. 샘플링 비율을 10%로 설정하면 오버헤드를 1~2% 이내로 줄일 수 있습니다. 반드시 부하 테스트를 통해 영향을 확인하세요.
+      </div>
+
+      <h2>실전 도입 로드맵</h2>
+
+      <p>OpenTelemetry를 점진적으로 도입하는 것을 권장합니다.</p>
+
+      <ul>
+        <li><strong>Phase 1 (1~2주):</strong> Java Agent를 이용한 자동 계측 적용. Jaeger/Tempo로 트레이스 수집 시작. 기본 대시보드 구성.</li>
+        <li><strong>Phase 2 (3~4주):</strong> 핵심 비즈니스 로직에 수동 계측 추가. 커스텀 메트릭 정의 및 수집. 로그에 Trace ID 연동.</li>
+        <li><strong>Phase 3 (5~6주):</strong> OTel Collector 도입 및 파이프라인 최적화. Tail-based 샘플링 적용. Grafana 통합 대시보드 완성.</li>
+        <li><strong>Phase 4 (지속적):</strong> 알림 규칙 정교화. SLO(서비스 수준 목표) 기반 모니터링. 팀 온보딩 및 문화 정착.</li>
+      </ul>
+
+      <h2>마무리</h2>
+
+      <p>OpenTelemetry는 분산 시스템의 관측성을 확보하는 데 가장 효과적인 도구입니다. 벤더 종속 없이 표준화된 방식으로 Traces, Metrics, Logs를 통합 수집하고, Grafana 생태계와 연동하여 강력한 관측성 플랫폼을 구축할 수 있습니다. 중요한 것은 도구를 도입하는 것 자체가 아니라, 팀이 관측성 데이터를 활용하여 문제를 빠르게 진단하고 해결하는 문화를 만드는 것입니다. 작은 범위에서 시작하여 점진적으로 확대해 나가시기 바랍니다.</p>
+
+      <div class="info-box">
+        <strong>추천 리소스:</strong> OpenTelemetry 공식 문서(opentelemetry.io), Grafana 관측성 스택 튜토리얼, CNCF 관측성 백서를 참고하면 더 깊이 있는 학습이 가능합니다.
+      </div>
+    </article>
+
+    <div class="ad-container"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../categories.html">카테고리</a>
+        <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <div class="footer-links" style="margin-top: 0.5rem;">
+          <a href="https://jaeseong90.github.io/jaeseong90Folio" target="_blank">포트폴리오</a>
+          <a href="https://jaeseong90.github.io/homepage-game" target="_blank">게임</a>
+          <a href="https://jaeseong90.github.io/Toolry" target="_blank">Toolry</a>
+        </div>
+        <p class="copyright">&copy; 2025 Jaeseong의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

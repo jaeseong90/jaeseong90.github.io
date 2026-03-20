@@ -31,6 +31,7 @@
       <button class="menu-toggle" onclick="toggleMenu()">☰</button>
       <nav id="nav">
         <a href="../index.html">홈</a>
+        <a href="../categories.html">카테고리</a>
         <a href="../about.html">소개</a>
         <a href="../contact.html">연락처</a>
       </nav>
@@ -70,6 +71,80 @@
     </ul>
 
     <p>3-Tier 아키텍처로 전환하면 Presentation Layer, Business Logic Layer, Data Access Layer가 명확히 분리되어 이런 문제들을 해결할 수 있습니다.</p>
+
+    <!-- 3-Tier 아키텍처 다이어그램 -->
+    <svg viewBox="0 0 800 520" width="100%" xmlns="http://www.w3.org/2000/svg" style="margin: 2rem 0; border-radius: 8px; background: #0f172a; padding: 1rem;">
+      <defs>
+        <marker id="arrowDown" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+        </marker>
+        <marker id="arrowUp" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto-start-reverse">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+        </marker>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <!-- 제목 -->
+      <text x="400" y="35" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="bold">Spring Boot 3-Tier 아키텍처 구조</text>
+      <!-- Presentation Layer -->
+      <rect x="150" y="55" width="500" height="110" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+      <rect x="160" y="60" width="480" height="30" rx="6" fill="url(#grad1)"/>
+      <text x="400" y="80" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">Presentation Layer (프레젠테이션 계층)</text>
+      <rect x="175" y="100" width="130" height="50" rx="8" fill="#1e3a5f"/>
+      <text x="240" y="120" text-anchor="middle" fill="#93c5fd" font-size="12" font-weight="bold">Controller</text>
+      <text x="240" y="138" text-anchor="middle" fill="#64748b" font-size="10">REST API 엔드포인트</text>
+      <rect x="335" y="100" width="130" height="50" rx="8" fill="#1e3a5f"/>
+      <text x="400" y="120" text-anchor="middle" fill="#93c5fd" font-size="12" font-weight="bold">DTO</text>
+      <text x="400" y="138" text-anchor="middle" fill="#64748b" font-size="10">요청/응답 객체</text>
+      <rect x="495" y="100" width="130" height="50" rx="8" fill="#1e3a5f"/>
+      <text x="560" y="120" text-anchor="middle" fill="#93c5fd" font-size="12" font-weight="bold">Validation</text>
+      <text x="560" y="138" text-anchor="middle" fill="#64748b" font-size="10">입력값 검증</text>
+      <!-- 화살표 1 -->
+      <line x1="400" y1="170" x2="400" y2="205" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowDown)"/>
+      <text x="430" y="192" fill="#94a3b8" font-size="11">요청/응답</text>
+      <!-- Business Logic Layer -->
+      <rect x="150" y="210" width="500" height="110" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+      <rect x="160" y="215" width="480" height="30" rx="6" fill="url(#grad2)"/>
+      <text x="400" y="235" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">Business Logic Layer (비즈니스 로직 계층)</text>
+      <rect x="175" y="255" width="130" height="50" rx="8" fill="#1a3a2a"/>
+      <text x="240" y="275" text-anchor="middle" fill="#6ee7b7" font-size="12" font-weight="bold">Service</text>
+      <text x="240" y="293" text-anchor="middle" fill="#64748b" font-size="10">비즈니스 로직 처리</text>
+      <rect x="335" y="255" width="130" height="50" rx="8" fill="#1a3a2a"/>
+      <text x="400" y="275" text-anchor="middle" fill="#6ee7b7" font-size="12" font-weight="bold">@Transactional</text>
+      <text x="400" y="293" text-anchor="middle" fill="#64748b" font-size="10">트랜잭션 관리</text>
+      <rect x="495" y="255" width="130" height="50" rx="8" fill="#1a3a2a"/>
+      <text x="560" y="275" text-anchor="middle" fill="#6ee7b7" font-size="12" font-weight="bold">Security</text>
+      <text x="560" y="293" text-anchor="middle" fill="#64748b" font-size="10">인증/인가 처리</text>
+      <!-- 화살표 2 -->
+      <line x1="400" y1="325" x2="400" y2="360" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowDown)"/>
+      <text x="430" y="347" fill="#94a3b8" font-size="11">데이터 조회/저장</text>
+      <!-- Data Access Layer -->
+      <rect x="150" y="365" width="500" height="110" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+      <rect x="160" y="370" width="480" height="30" rx="6" fill="url(#grad3)"/>
+      <text x="400" y="390" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">Data Access Layer (데이터 접근 계층)</text>
+      <rect x="175" y="410" width="130" height="50" rx="8" fill="#3a2a1a"/>
+      <text x="240" y="430" text-anchor="middle" fill="#fcd34d" font-size="12" font-weight="bold">MyBatis Mapper</text>
+      <text x="240" y="448" text-anchor="middle" fill="#64748b" font-size="10">SQL 매핑</text>
+      <rect x="335" y="410" width="130" height="50" rx="8" fill="#3a2a1a"/>
+      <text x="400" y="430" text-anchor="middle" fill="#fcd34d" font-size="12" font-weight="bold">Repository</text>
+      <text x="400" y="448" text-anchor="middle" fill="#64748b" font-size="10">데이터 접근 추상화</text>
+      <rect x="495" y="410" width="130" height="50" rx="8" fill="#3a2a1a"/>
+      <text x="560" y="430" text-anchor="middle" fill="#fcd34d" font-size="12" font-weight="bold">MSSQL</text>
+      <text x="560" y="448" text-anchor="middle" fill="#64748b" font-size="10">데이터베이스</text>
+      <!-- 클라이언트 표시 -->
+      <rect x="330" y="480" width="140" height="30" rx="6" fill="#8b5cf6" opacity="0.2" stroke="#8b5cf6" stroke-width="1"/>
+      <text x="400" y="500" text-anchor="middle" fill="#a78bfa" font-size="12">Spring Boot 3.x + Java 17</text>
+    </svg>
 
     <h2>기술 스택 선정</h2>
 
@@ -194,7 +269,8 @@ passwordEncoder.matches(rawPassword, encodedPassword);</code></pre>
     <div class="container">
       <div class="footer-content">
         <div class="footer-links">
-          <a href="../about.html">소개</a>
+          <a href="../categories.html">카테고리</a>
+        <a href="../about.html">소개</a>
           <a href="../privacy.html">개인정보처리방침</a>
           <a href="../terms.html">이용약관</a>
           <a href="../contact.html">연락처</a>

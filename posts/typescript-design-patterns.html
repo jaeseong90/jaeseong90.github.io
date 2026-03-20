@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="TypeScript에서 실전 디자인 패턴을 활용하는 방법. Strategy, Observer, Repository, Builder, Decorator 패턴과 타입 시스템을 결합한 프론트엔드/백엔드 패턴 가이드.">
+  <meta name="keywords" content="TypeScript, 디자인 패턴, Strategy, Observer, Repository, NestJS, 프론트엔드">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="TypeScript 디자인 패턴 실전: 프론트엔드와 백엔드에서 활용하기">
+  <meta property="og:description" content="TypeScript에서 실전 디자인 패턴을 활용하는 방법. Strategy, Observer, Repository, Builder, Decorator, Factory 패턴 가이드.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/typescript-design-patterns.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/typescript-design-patterns.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+  <title>TypeScript 디자인 패턴 실전: 프론트엔드와 백엔드에서 활용하기 | Jaeseong의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../categories.html">카테고리</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="post-header">
+    <div class="container">
+      <span class="post-tag">TypeScript</span>
+      <h1>TypeScript 디자인 패턴 실전: 프론트엔드와 백엔드에서 활용하기</h1>
+      <div class="post-meta">
+        <span>2026.03.14</span>
+        <span>14분 읽기</span>
+        <span>Jaeseong</span>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="ad-container"></div>
+
+    <article class="post-content">
+      <p>디자인 패턴은 반복되는 설계 문제를 해결하는 검증된 템플릿입니다. TypeScript의 강력한 타입 시스템은 디자인 패턴을 더욱 안전하고 표현력 있게 구현할 수 있게 해줍니다. 이 글에서는 프론트엔드와 백엔드 개발에서 실제로 자주 사용하는 패턴을 TypeScript 코드로 구현하며, 각 패턴이 어떤 문제를 해결하는지 구체적으로 살펴봅니다.</p>
+
+      <h2>TypeScript에서 디자인 패턴이 중요한 이유</h2>
+
+      <p>JavaScript에서는 동적 타이핑으로 인해 디자인 패턴의 구조적 제약을 컴파일 타임에 보장하기 어렵습니다. TypeScript는 인터페이스, 제네릭, 유니온 타입, 조건부 타입 등의 기능으로 패턴의 계약(contract)을 타입 수준에서 강제할 수 있습니다.</p>
+
+      <ul>
+        <li><strong>컴파일 타임 안전성:</strong> 인터페이스를 통해 패턴의 구조를 강제하고, 구현 누락을 컴파일 시점에 감지합니다.</li>
+        <li><strong>자기 문서화:</strong> 타입 정의 자체가 패턴의 의도를 명확하게 전달합니다.</li>
+        <li><strong>리팩토링 안전성:</strong> 패턴 구조를 변경할 때 타입 체커가 영향 범위를 정확히 알려줍니다.</li>
+        <li><strong>IDE 지원:</strong> 자동완성, 타입 추론, 빠른 탐색 등으로 패턴 활용 생산성이 높아집니다.</li>
+      </ul>
+
+      <div class="info-box">
+        <strong>패턴 선택 기준:</strong> 디자인 패턴은 복잡한 문제를 해결하기 위한 도구입니다. 단순한 문제에 패턴을 과도하게 적용하면 오히려 코드가 복잡해집니다. "이 코드가 변경될 가능성이 있는가?"를 기준으로 패턴 적용 여부를 판단하세요.
+      </div>
+
+      <h2>Strategy 패턴: 결제 시스템</h2>
+
+      <p>Strategy 패턴은 알고리즘을 캡슐화하여 런타임에 교체할 수 있게 하는 패턴입니다. 결제 시스템처럼 여러 처리 방식을 지원해야 하는 경우에 적합합니다.</p>
+
+      <pre><code>// 결제 전략 인터페이스
+interface PaymentStrategy {
+  readonly name: string;
+  validate(amount: number): boolean;
+  pay(amount: number, metadata: PaymentMetadata): Promise&lt;PaymentResult&gt;;
+  refund(transactionId: string, amount: number): Promise&lt;RefundResult&gt;;
+}
+
+interface PaymentMetadata {
+  orderId: string;
+  customerId: string;
+  description?: string;
+}
+
+interface PaymentResult {
+  success: boolean;
+  transactionId: string;
+  paidAt: Date;
+}
+
+interface RefundResult {
+  success: boolean;
+  refundId: string;
+  refundedAt: Date;
+}
+
+// 신용카드 결제 전략
+class CreditCardStrategy implements PaymentStrategy {
+  readonly name = 'credit-card';
+
+  validate(amount: number): boolean {
+    return amount > 0 && amount <= 10_000_000;
+  }
+
+  async pay(amount: number, metadata: PaymentMetadata): Promise&lt;PaymentResult&gt; {
+    // PG사 API 호출
+    const response = await pgClient.approve({
+      amount,
+      orderId: metadata.orderId,
+      method: 'card',
+    });
+
+    return {
+      success: response.status === 'approved',
+      transactionId: response.txnId,
+      paidAt: new Date(),
+    };
+  }
+
+  async refund(transactionId: string, amount: number): Promise&lt;RefundResult&gt; {
+    const response = await pgClient.cancel({ transactionId, amount });
+    return {
+      success: response.status === 'refunded',
+      refundId: response.refundId,
+      refundedAt: new Date(),
+    };
+  }
+}
+
+// 가상계좌 결제 전략
+class VirtualAccountStrategy implements PaymentStrategy {
+  readonly name = 'virtual-account';
+
+  validate(amount: number): boolean {
+    return amount >= 1000; // 최소 1,000원
+  }
+
+  async pay(amount: number, metadata: PaymentMetadata): Promise&lt;PaymentResult&gt; {
+    const response = await pgClient.createVirtualAccount({
+      amount,
+      orderId: metadata.orderId,
+      bankCode: '004', // KB국민은행
+      expireAt: addHours(new Date(), 24),
+    });
+
+    return {
+      success: true,
+      transactionId: response.txnId,
+      paidAt: new Date(),
+    };
+  }
+
+  async refund(transactionId: string, amount: number): Promise&lt;RefundResult&gt; {
+    // 가상계좌는 입금 전 취소만 가능
+    const response = await pgClient.cancelVirtualAccount({ transactionId });
+    return {
+      success: response.status === 'cancelled',
+      refundId: response.refundId,
+      refundedAt: new Date(),
+    };
+  }
+}
+
+// 결제 컨텍스트
+class PaymentService {
+  private strategies: Map&lt;string, PaymentStrategy&gt; = new Map();
+
+  registerStrategy(strategy: PaymentStrategy): void {
+    this.strategies.set(strategy.name, strategy);
+  }
+
+  async processPayment(
+    method: string,
+    amount: number,
+    metadata: PaymentMetadata
+  ): Promise&lt;PaymentResult&gt; {
+    const strategy = this.strategies.get(method);
+    if (!strategy) {
+      throw new Error(`지원하지 않는 결제 방식: ${method}`);
+    }
+
+    if (!strategy.validate(amount)) {
+      throw new Error(`유효하지 않은 결제 금액: ${amount}`);
+    }
+
+    return strategy.pay(amount, metadata);
+  }
+}
+
+// 사용 예시
+const paymentService = new PaymentService();
+paymentService.registerStrategy(new CreditCardStrategy());
+paymentService.registerStrategy(new VirtualAccountStrategy());</code></pre>
+
+      <h2>Observer 패턴: 이벤트 시스템</h2>
+
+      <p>Observer 패턴은 객체의 상태 변화를 다른 객체들에게 자동으로 알리는 패턴입니다. TypeScript의 제네릭을 활용하면 타입 안전한 이벤트 시스템을 만들 수 있습니다.</p>
+
+      <pre><code>// 타입 안전한 이벤트 맵 정의
+interface EventMap {
+  'order:created': { orderId: string; amount: number; customerId: string };
+  'order:paid': { orderId: string; transactionId: string; paidAt: Date };
+  'order:cancelled': { orderId: string; reason: string };
+  'user:registered': { userId: string; email: string };
+  'user:login': { userId: string; ip: string; userAgent: string };
+}
+
+type EventHandler&lt;T&gt; = (payload: T) =&gt; void | Promise&lt;void&gt;;
+
+class TypedEventEmitter&lt;TEvents extends Record&lt;string, any&gt;&gt; {
+  private handlers = new Map&lt;keyof TEvents, Set&lt;EventHandler&lt;any&gt;&gt;&gt;();
+
+  on&lt;K extends keyof TEvents&gt;(event: K, handler: EventHandler&lt;TEvents[K]&gt;): () =&gt; void {
+    if (!this.handlers.has(event)) {
+      this.handlers.set(event, new Set());
+    }
+    this.handlers.get(event)!.add(handler);
+
+    // 구독 해제 함수 반환
+    return () =&gt; {
+      this.handlers.get(event)?.delete(handler);
+    };
+  }
+
+  async emit&lt;K extends keyof TEvents&gt;(event: K, payload: TEvents[K]): Promise&lt;void&gt; {
+    const eventHandlers = this.handlers.get(event);
+    if (!eventHandlers) return;
+
+    const promises = [...eventHandlers].map((handler) =&gt;
+      Promise.resolve(handler(payload)).catch((error) =&gt; {
+        console.error(`이벤트 핸들러 오류 [${String(event)}]:`, error);
+      })
+    );
+
+    await Promise.all(promises);
+  }
+
+  once&lt;K extends keyof TEvents&gt;(event: K, handler: EventHandler&lt;TEvents[K]&gt;): () =&gt; void {
+    const unsubscribe = this.on(event, (payload) =&gt; {
+      unsubscribe();
+      return handler(payload);
+    });
+    return unsubscribe;
+  }
+}
+
+// 사용 예시
+const eventBus = new TypedEventEmitter&lt;EventMap&gt;();
+
+// 타입 안전한 이벤트 구독
+eventBus.on('order:created', async (payload) =&gt; {
+  // payload의 타입이 자동 추론됨
+  console.log(`새 주문: ${payload.orderId}, 금액: ${payload.amount}`);
+  await notificationService.sendOrderConfirmation(payload.customerId);
+});
+
+eventBus.on('order:paid', async (payload) =&gt; {
+  await inventoryService.reserveStock(payload.orderId);
+  await emailService.sendReceipt(payload.transactionId);
+});
+
+// 타입 안전한 이벤트 발행
+await eventBus.emit('order:created', {
+  orderId: 'ORD-001',
+  amount: 50000,
+  customerId: 'USR-123',
+});</code></pre>
+
+      <h2>Repository 패턴: 데이터 액세스 추상화</h2>
+
+      <p>Repository 패턴은 데이터 저장소에 대한 접근을 추상화하여, 비즈니스 로직이 특정 데이터베이스 기술에 의존하지 않게 합니다.</p>
+
+      <pre><code>// 기본 엔티티 타입
+interface BaseEntity {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 제네릭 Repository 인터페이스
+interface Repository&lt;T extends BaseEntity&gt; {
+  findById(id: string): Promise&lt;T | null&gt;;
+  findAll(options?: FindAllOptions): Promise&lt;PaginatedResult&lt;T&gt;&gt;;
+  create(data: Omit&lt;T, 'id' | 'createdAt' | 'updatedAt'&gt;): Promise&lt;T&gt;;
+  update(id: string, data: Partial&lt;Omit&lt;T, 'id' | 'createdAt' | 'updatedAt'&gt;&gt;): Promise&lt;T&gt;;
+  delete(id: string): Promise&lt;void&gt;;
+}
+
+interface FindAllOptions {
+  page?: number;
+  limit?: number;
+  sort?: { field: string; order: 'asc' | 'desc' };
+}
+
+interface PaginatedResult&lt;T&gt; {
+  data: T[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+// User 엔티티
+interface User extends BaseEntity {
+  email: string;
+  name: string;
+  role: 'admin' | 'user' | 'guest';
+}
+
+// User 전용 Repository (확장 메서드 포함)
+interface UserRepository extends Repository&lt;User&gt; {
+  findByEmail(email: string): Promise&lt;User | null&gt;;
+  findByRole(role: User['role']): Promise&lt;User[]&gt;;
+}
+
+// Prisma 구현체
+class PrismaUserRepository implements UserRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  async findById(id: string): Promise&lt;User | null&gt; {
+    return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  async findAll(options: FindAllOptions = {}): Promise&lt;PaginatedResult&lt;User&gt;&gt; {
+    const { page = 1, limit = 20, sort } = options;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.user.findMany({
+        skip,
+        take: limit,
+        orderBy: sort ? { [sort.field]: sort.order } : { createdAt: 'desc' },
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async create(data: Omit&lt;User, 'id' | 'createdAt' | 'updatedAt'&gt;): Promise&lt;User&gt; {
+    return this.prisma.user.create({ data });
+  }
+
+  async update(id: string, data: Partial&lt;Omit&lt;User, 'id' | 'createdAt' | 'updatedAt'&gt;&gt;): Promise&lt;User&gt; {
+    return this.prisma.user.update({ where: { id }, data });
+  }
+
+  async delete(id: string): Promise&lt;void&gt; {
+    await this.prisma.user.delete({ where: { id } });
+  }
+
+  async findByEmail(email: string): Promise&lt;User | null&gt; {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  async findByRole(role: User['role']): Promise&lt;User[]&gt; {
+    return this.prisma.user.findMany({ where: { role } });
+  }
+}</code></pre>
+
+      <div class="info-box">
+        <strong>테스트 용이성:</strong> Repository 인터페이스를 정의해두면 테스트 시 In-Memory 구현체로 쉽게 교체할 수 있습니다. 이는 단위 테스트에서 데이터베이스 의존성을 제거하는 핵심 전략입니다.
+      </div>
+
+      <h2>Builder 패턴: 복잡한 객체 생성</h2>
+
+      <p>Builder 패턴은 복잡한 객체를 단계적으로 구성할 수 있게 하며, TypeScript의 타입 시스템으로 필수 필드 누락을 컴파일 타임에 감지할 수 있습니다.</p>
+
+      <pre><code>// HTTP 요청 빌더
+interface RequestConfig {
+  url: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  headers: Record&lt;string, string&gt;;
+  body?: unknown;
+  timeout: number;
+  retryCount: number;
+  retryDelay: number;
+}
+
+class RequestBuilder {
+  private config: Partial&lt;RequestConfig&gt; = {
+    method: 'GET',
+    headers: {},
+    timeout: 30000,
+    retryCount: 0,
+    retryDelay: 1000,
+  };
+
+  url(url: string): this {
+    this.config.url = url;
+    return this;
+  }
+
+  method(method: RequestConfig['method']): this {
+    this.config.method = method;
+    return this;
+  }
+
+  header(key: string, value: string): this {
+    this.config.headers = { ...this.config.headers, [key]: value };
+    return this;
+  }
+
+  bearerToken(token: string): this {
+    return this.header('Authorization', `Bearer ${token}`);
+  }
+
+  contentType(type: string): this {
+    return this.header('Content-Type', type);
+  }
+
+  json(data: unknown): this {
+    this.config.body = data;
+    this.config.method = this.config.method === 'GET' ? 'POST' : this.config.method;
+    return this.contentType('application/json');
+  }
+
+  timeout(ms: number): this {
+    this.config.timeout = ms;
+    return this;
+  }
+
+  retry(count: number, delayMs: number = 1000): this {
+    this.config.retryCount = count;
+    this.config.retryDelay = delayMs;
+    return this;
+  }
+
+  build(): RequestConfig {
+    if (!this.config.url) {
+      throw new Error('URL은 필수입니다.');
+    }
+    return this.config as RequestConfig;
+  }
+}
+
+// 사용 예시
+const request = new RequestBuilder()
+  .url('https://api.example.com/orders')
+  .method('POST')
+  .bearerToken('eyJhbGciOiJIUzI1NiIs...')
+  .json({ customerId: 'USR-001', items: [{ productId: 'P-100', qty: 2 }] })
+  .timeout(5000)
+  .retry(3, 2000)
+  .build();</code></pre>
+
+      <h2>Decorator 패턴: NestJS에서의 활용</h2>
+
+      <p>NestJS는 TypeScript의 데코레이터를 적극적으로 활용하는 프레임워크입니다. 커스텀 데코레이터를 만들어 횡단 관심사(Cross-Cutting Concerns)를 깔끔하게 처리할 수 있습니다.</p>
+
+      <pre><code>import { createParamDecorator, ExecutionContext, SetMetadata } from '@nestjs/common';
+import { CallHandler, ExecutionContext as NestContext, NestInterceptor } from '@nestjs/common';
+import { Observable, tap } from 'rxjs';
+
+// 1. 현재 사용자 추출 데코레이터
+export const CurrentUser = createParamDecorator(
+  (data: keyof UserPayload | undefined, ctx: ExecutionContext) =&gt; {
+    const request = ctx.switchToHttp().getRequest();
+    const user = request.user as UserPayload;
+    return data ? user?.[data] : user;
+  },
+);
+
+// 사용: @CurrentUser() user: UserPayload
+// 사용: @CurrentUser('id') userId: string
+
+// 2. 역할 기반 접근 제어 데코레이터
+export const Roles = (...roles: string[]) =&gt; SetMetadata('roles', roles);
+
+// Guard에서 활용
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride&lt;string[]&gt;('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (!requiredRoles) return true;
+
+    const { user } = context.switchToHttp().getRequest();
+    return requiredRoles.some((role) =&gt; user.roles?.includes(role));
+  }
+}
+
+// 3. 실행 시간 로깅 데코레이터
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(LoggingInterceptor.name);
+
+  intercept(context: NestContext, next: CallHandler): Observable&lt;any&gt; {
+    const request = context.switchToHttp().getRequest();
+    const { method, url } = request;
+    const startTime = Date.now();
+
+    return next.handle().pipe(
+      tap(() =&gt; {
+        const duration = Date.now() - startTime;
+        this.logger.log(`${method} ${url} - ${duration}ms`);
+      }),
+    );
+  }
+}
+
+// 컨트롤러에서 활용
+@Controller('orders')
+@UseGuards(RolesGuard)
+export class OrderController {
+  @Post()
+  @Roles('admin', 'user')
+  async createOrder(
+    @CurrentUser() user: UserPayload,
+    @Body() dto: CreateOrderDto,
+  ) {
+    return this.orderService.create(user.id, dto);
+  }
+}</code></pre>
+
+      <h2>Factory 패턴: 객체 생성 캡슐화</h2>
+
+      <p>Factory 패턴은 객체 생성 로직을 캡슐화하여 클라이언트 코드가 구체적인 클래스를 알 필요 없게 합니다. TypeScript의 판별 유니온(Discriminated Union)과 결합하면 매우 강력합니다.</p>
+
+      <pre><code>// 알림 타입별 판별 유니온
+type NotificationConfig =
+  | { type: 'email'; to: string; subject: string; body: string }
+  | { type: 'sms'; phoneNumber: string; message: string }
+  | { type: 'push'; deviceToken: string; title: string; body: string }
+  | { type: 'slack'; channel: string; text: string; blocks?: SlackBlock[] };
+
+interface NotificationSender {
+  send(config: any): Promise&lt;{ success: boolean; messageId: string }&gt;;
+}
+
+class EmailSender implements NotificationSender {
+  async send(config: Extract&lt;NotificationConfig, { type: 'email' }&gt;) {
+    const result = await mailer.send({
+      to: config.to,
+      subject: config.subject,
+      html: config.body,
+    });
+    return { success: true, messageId: result.id };
+  }
+}
+
+class SmsSender implements NotificationSender {
+  async send(config: Extract&lt;NotificationConfig, { type: 'sms' }&gt;) {
+    const result = await smsClient.send({
+      to: config.phoneNumber,
+      content: config.message,
+    });
+    return { success: true, messageId: result.id };
+  }
+}
+
+class PushSender implements NotificationSender {
+  async send(config: Extract&lt;NotificationConfig, { type: 'push' }&gt;) {
+    const result = await fcm.send({
+      token: config.deviceToken,
+      notification: { title: config.title, body: config.body },
+    });
+    return { success: true, messageId: result.id };
+  }
+}
+
+// Factory
+class NotificationFactory {
+  private static senders: Record&lt;string, NotificationSender&gt; = {
+    email: new EmailSender(),
+    sms: new SmsSender(),
+    push: new PushSender(),
+  };
+
+  static getSender(type: NotificationConfig['type']): NotificationSender {
+    const sender = this.senders[type];
+    if (!sender) throw new Error(`지원하지 않는 알림 타입: ${type}`);
+    return sender;
+  }
+
+  static async send(config: NotificationConfig) {
+    const sender = this.getSender(config.type);
+    return sender.send(config);
+  }
+}
+
+// 사용 예시 - 타입에 따라 자동으로 올바른 Sender 선택
+await NotificationFactory.send({
+  type: 'email',
+  to: 'user@example.com',
+  subject: '주문 확인',
+  body: '&lt;h1&gt;주문이 완료되었습니다.&lt;/h1&gt;',
+});</code></pre>
+
+      <h2>타입 시스템을 활용한 패턴 강화</h2>
+
+      <p>TypeScript의 고급 타입 기능을 활용하면 디자인 패턴을 더욱 안전하게 만들 수 있습니다.</p>
+
+      <h3>조건부 타입으로 상태 머신 구현</h3>
+
+      <pre><code>// 주문 상태에 따라 허용되는 액션을 타입으로 제한
+type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+
+type AllowedTransitions = {
+  pending: 'paid' | 'cancelled';
+  paid: 'shipped' | 'cancelled';
+  shipped: 'delivered';
+  delivered: never;
+  cancelled: never;
+};
+
+class StateMachine&lt;S extends string, T extends Record&lt;S, string&gt;&gt; {
+  constructor(private state: S) {}
+
+  getState(): S {
+    return this.state;
+  }
+
+  transition&lt;Current extends S&gt;(
+    from: Current,
+    to: T[Current] extends string ? T[Current] : never,
+  ): void {
+    if (this.state !== from) {
+      throw new Error(`현재 상태(${this.state})에서 전환할 수 없습니다.`);
+    }
+    this.state = to as unknown as S;
+  }
+}
+
+// 사용 예시
+const orderState = new StateMachine&lt;OrderStatus, AllowedTransitions&gt;('pending');
+orderState.transition('pending', 'paid');       // OK
+orderState.transition('paid', 'shipped');       // OK
+// orderState.transition('delivered', 'pending'); // 컴파일 에러!</code></pre>
+
+      <h3>Branded Types로 안전한 값 구분</h3>
+
+      <pre><code>// 같은 string이지만 서로 다른 의미의 ID를 구분
+type Brand&lt;T, B extends string&gt; = T & { __brand: B };
+
+type UserId = Brand&lt;string, 'UserId'&gt;;
+type OrderId = Brand&lt;string, 'OrderId'&gt;;
+type ProductId = Brand&lt;string, 'ProductId'&gt;;
+
+// 생성 함수
+const createUserId = (id: string): UserId =&gt; id as UserId;
+const createOrderId = (id: string): OrderId =&gt; id as OrderId;
+
+// 함수에서 타입 안전하게 사용
+function getOrder(orderId: OrderId): Promise&lt;Order&gt; {
+  return orderRepository.findById(orderId);
+}
+
+const userId = createUserId('usr-001');
+const orderId = createOrderId('ord-001');
+
+getOrder(orderId);  // OK
+// getOrder(userId); // 컴파일 에러! UserId를 OrderId로 사용 불가</code></pre>
+
+      <h2>안티패턴과 주의사항</h2>
+
+      <p>디자인 패턴을 잘못 적용하면 오히려 코드 품질이 저하됩니다. 자주 발생하는 안티패턴을 살펴보겠습니다.</p>
+
+      <h3>1. 과도한 추상화 (Over-Engineering)</h3>
+
+      <pre><code>// 나쁜 예: 구현체가 하나뿐인데 인터페이스 + 팩토리 + DI
+interface IUserNameFormatter {
+  format(user: User): string;
+}
+class UserNameFormatter implements IUserNameFormatter { ... }
+class UserNameFormatterFactory { ... }
+
+// 좋은 예: 단순한 함수로 충분
+function formatUserName(user: User): string {
+  return `${user.firstName} ${user.lastName}`;
+}</code></pre>
+
+      <h3>2. God Object 패턴</h3>
+
+      <pre><code>// 나쁜 예: 너무 많은 책임을 가진 서비스
+class OrderService {
+  createOrder() { ... }
+  processPayment() { ... }
+  sendNotification() { ... }
+  updateInventory() { ... }
+  generateInvoice() { ... }
+  calculateShipping() { ... }
+  // 수백 줄의 메서드들...
+}
+
+// 좋은 예: 단일 책임 원칙 적용
+class OrderService {
+  constructor(
+    private paymentService: PaymentService,
+    private notificationService: NotificationService,
+    private inventoryService: InventoryService,
+  ) {}
+
+  async createOrder(dto: CreateOrderDto): Promise&lt;Order&gt; {
+    const order = await this.saveOrder(dto);
+    await this.paymentService.process(order);
+    await this.inventoryService.reserve(order.items);
+    await this.notificationService.sendOrderConfirmation(order);
+    return order;
+  }
+}</code></pre>
+
+      <div class="warning-box">
+        <strong>패턴 적용의 황금 규칙:</strong> "세 번 반복되기 전에는 추상화하지 마라(Rule of Three)." 비슷한 코드가 세 번 이상 나타날 때 패턴을 적용하면 과도한 추상화를 방지할 수 있습니다.
+      </div>
+
+      <h3>3. 타입 단언(as) 남용</h3>
+
+      <pre><code>// 나쁜 예: 타입 단언으로 타입 안전성 무력화
+const data = fetchData() as unknown as User;
+
+// 좋은 예: 런타임 검증과 타입 가드 사용
+function isUser(data: unknown): data is User {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'id' in data &&
+    'email' in data &&
+    typeof (data as User).email === 'string'
+  );
+}
+
+const data = fetchData();
+if (isUser(data)) {
+  // data는 User 타입으로 안전하게 사용 가능
+  console.log(data.email);
+}</code></pre>
+
+      <h2>마무리: 실전 적용 가이드</h2>
+
+      <p>디자인 패턴은 도구일 뿐, 목적이 아닙니다. 각 패턴이 해결하는 문제를 이해하고, 실제로 그 문제가 존재할 때 적용하는 것이 중요합니다.</p>
+
+      <ul>
+        <li><strong>Strategy:</strong> 여러 알고리즘을 교체 가능하게 해야 할 때 (결제, 인증, 정렬 등)</li>
+        <li><strong>Observer:</strong> 이벤트 기반 느슨한 결합이 필요할 때 (알림, 로깅, 캐시 무효화)</li>
+        <li><strong>Repository:</strong> 데이터 접근 계층을 추상화해야 할 때 (테스트 용이성, DB 교체 가능성)</li>
+        <li><strong>Builder:</strong> 복잡한 객체를 단계적으로 생성해야 할 때 (설정, 쿼리, HTTP 요청)</li>
+        <li><strong>Decorator:</strong> 기존 객체에 동적으로 책임을 추가해야 할 때 (로깅, 캐싱, 인증)</li>
+        <li><strong>Factory:</strong> 객체 생성 로직을 캡슐화해야 할 때 (다형성, 조건부 생성)</li>
+      </ul>
+
+      <p>TypeScript의 타입 시스템을 적극 활용하면, 패턴의 구조적 제약을 컴파일 타임에 보장받을 수 있어 런타임 오류를 크게 줄일 수 있습니다. 코드 리뷰에서 팀원들과 함께 패턴의 적용 여부를 논의하며 점진적으로 도입해 나가시기 바랍니다.</p>
+
+      <div class="info-box">
+        <strong>추천 리소스:</strong> "Design Patterns: Elements of Reusable Object-Oriented Software" (GoF), "Refactoring: Improving the Design of Existing Code" (Martin Fowler), TypeScript 공식 핸드북의 Advanced Types 섹션을 참고하세요.
+      </div>
+    </article>
+
+    <div class="ad-container"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../categories.html">카테고리</a>
+        <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <div class="footer-links" style="margin-top: 0.5rem;">
+          <a href="https://jaeseong90.github.io/jaeseong90Folio" target="_blank">포트폴리오</a>
+          <a href="https://jaeseong90.github.io/homepage-game" target="_blank">게임</a>
+          <a href="https://jaeseong90.github.io/Toolry" target="_blank">Toolry</a>
+        </div>
+        <p class="copyright">&copy; 2025 Jaeseong의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

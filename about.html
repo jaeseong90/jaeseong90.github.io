@@ -3,22 +3,195 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="개발자 Jaeseong 소개 - 엔터프라이즈 시스템 개발 전문가">
+  <meta name="description" content="Jaeseong - 엔터프라이즈 시스템 개발자, Spring Boot/Flutter/AI 전문가. 8년차 개발 경험과 기술 스택을 소개합니다.">
+  <meta name="keywords" content="개발자 소개, Jaeseong, Spring Boot, Flutter, AI, 엔터프라이즈 개발">
   <meta name="google-adsense-account" content="ca-pub-6529673634044767">
-  
+
+  <meta property="og:title" content="About Jaeseong | Jaeseong의 개발 블로그">
+  <meta property="og:description" content="엔터프라이즈 시스템 개발자 Jaeseong의 소개 페이지">
+  <meta property="og:type" content="profile">
+  <meta property="og:url" content="https://jaeseong90.github.io/about.html">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="canonical" href="https://jaeseong90.github.io/about.html">
+
   <title>소개 | Jaeseong의 개발 블로그</title>
-  
+
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-  
+
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .about-hero {
+      text-align: center;
+      padding: 3rem 0 2rem;
+    }
+    .about-hero h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .about-hero .subtitle {
+      color: #888;
+      font-size: 1.1rem;
+    }
+    .about-section {
+      margin-bottom: 2.5rem;
+    }
+    .about-section h2 {
+      color: #00d4aa;
+      border-bottom: 2px solid #00d4aa33;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+      border-left: 3px solid #00d4aa44;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 1.8rem;
+      padding-left: 1rem;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2.65rem;
+      top: 0.3rem;
+      width: 12px;
+      height: 12px;
+      background: #00d4aa;
+      border-radius: 50%;
+    }
+    .timeline-item .year {
+      color: #00d4aa;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .timeline-item h3 {
+      margin: 0.2rem 0 0.3rem;
+      font-size: 1.05rem;
+    }
+    .timeline-item p {
+      color: #aaa;
+      font-size: 0.95rem;
+      margin: 0;
+    }
+    .skill-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    .skill-card {
+      background: #1a1a2e;
+      border: 1px solid #ffffff10;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .skill-card h3 {
+      color: #00d4aa;
+      margin-top: 0;
+      font-size: 1rem;
+    }
+    .skill-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .skill-card ul li {
+      padding: 0.3rem 0;
+      color: #ccc;
+      font-size: 0.95rem;
+    }
+    .skill-card ul li::before {
+      content: '>';
+      color: #00d4aa;
+      margin-right: 0.5rem;
+      font-family: 'Fira Code', monospace;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .stat-item {
+      background: #1a1a2e;
+      border: 1px solid #ffffff10;
+      border-radius: 10px;
+      padding: 1.2rem;
+      text-align: center;
+    }
+    .stat-item .number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #00d4aa;
+      display: block;
+    }
+    .stat-item .label {
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 0.3rem;
+      display: block;
+    }
+    .project-list {
+      display: grid;
+      gap: 1rem;
+    }
+    .project-item {
+      background: #1a1a2e;
+      border: 1px solid #ffffff10;
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+    }
+    .project-item h3 {
+      margin: 0 0 0.3rem;
+      font-size: 1rem;
+    }
+    .project-item p {
+      margin: 0;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+    .project-item .tech {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .project-item .tech span {
+      background: #00d4aa22;
+      color: #00d4aa;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .values-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .value-item {
+      background: #1a1a2e;
+      border-left: 3px solid #00d4aa;
+      padding: 1rem 1.2rem;
+      border-radius: 0 8px 8px 0;
+    }
+    .value-item h3 {
+      margin: 0 0 0.3rem;
+      font-size: 1rem;
+      color: #e0e0e0;
+    }
+    .value-item p {
+      margin: 0;
+      color: #999;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
-  <!-- Header -->
   <header>
     <div class="container">
       <a href="index.html" class="logo">
@@ -27,76 +200,180 @@
       <button class="menu-toggle" onclick="toggleMenu()">☰</button>
       <nav id="nav">
         <a href="index.html">홈</a>
+        <a href="categories.html">카테고리</a>
         <a href="about.html" class="active">소개</a>
         <a href="contact.html">연락처</a>
       </nav>
     </div>
   </header>
 
-  <!-- Page Header -->
-  <section class="page-header">
-    <div class="container">
-      <h1>About Me</h1>
-    </div>
-  </section>
-
-  <!-- Content -->
   <main class="page-content">
-    <h2>안녕하세요, 개발자 Jaeseong입니다 👋</h2>
-    
-    <p>대기업 IT 자회사에서 R&D 업무를 담당하고 있으며, 엔터프라이즈 비즈니스 시스템 개발을 전문으로 합니다. ERP-그룹웨어 연동, 배치 API 미들웨어, RPA 기반 자동화 등 다양한 프로젝트 경험을 보유하고 있습니다.</p>
+    <div class="container">
+      <!-- Hero -->
+      <div class="about-hero">
+        <h1>Jaeseong</h1>
+        <p class="subtitle">Software Engineer / Enterprise System Developer</p>
+      </div>
 
-    <h2>주요 기술 스택</h2>
-    
-    <p><strong>Backend</strong></p>
-    <ul>
-      <li>Spring Boot, MyBatis, JPA</li>
-      <li>Java 17+, Kotlin</li>
-      <li>MSSQL, PostgreSQL, Oracle</li>
-      <li>RESTful API 설계</li>
-    </ul>
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="number">8+</span>
+          <span class="label">Years Experience</span>
+        </div>
+        <div class="stat-item">
+          <span class="number">30+</span>
+          <span class="label">Projects</span>
+        </div>
+        <div class="stat-item">
+          <span class="number">15+</span>
+          <span class="label">Tech Articles</span>
+        </div>
+        <div class="stat-item">
+          <span class="number">3</span>
+          <span class="label">Side Projects</span>
+        </div>
+      </div>
 
-    <p><strong>Frontend & Mobile</strong></p>
-    <ul>
-      <li>Flutter, Dart</li>
-      <li>Riverpod 상태관리</li>
-      <li>HTML, CSS, JavaScript</li>
-      <li>Webix UI 프레임워크</li>
-    </ul>
+      <!-- Intro -->
+      <div class="about-section">
+        <h2>About Me</h2>
+        <p>안녕하세요, 소프트웨어 엔지니어 Jaeseong입니다.</p>
+        <p>대기업 IT 자회사에서 R&D 업무를 담당하며, <strong>엔터프라이즈 비즈니스 시스템 개발</strong>을 전문으로 합니다. ERP-그룹웨어 연동, 배치 API 미들웨어, RPA 기반 업무 자동화 등 실무에서 다양한 문제를 해결해왔습니다.</p>
+        <p>최근에는 <strong>AI를 활용한 개발 생산성 향상</strong>에 집중하고 있으며, Claude Code와 MCP를 활용한 개발 워크플로우 최적화를 연구하고 있습니다. 이 블로그를 통해 실무에서 겪은 문제 해결 과정, 기술적 의사결정의 배경, 그리고 새로운 기술을 실전에 적용한 경험을 공유합니다.</p>
+      </div>
 
-    <p><strong>DevOps & Tools</strong></p>
-    <ul>
-      <li>Prometheus, Grafana 모니터링</li>
-      <li>Git, GitHub Actions</li>
-      <li>Docker, Tomcat</li>
-      <li>AI 도구 (Claude, Cursor)</li>
-    </ul>
+      <!-- Career Timeline -->
+      <div class="about-section">
+        <h2>Career Timeline</h2>
+        <div class="timeline">
+          <div class="timeline-item">
+            <span class="year">2024 ~ 현재</span>
+            <h3>AI 기반 개발 표준 연구 & 기술 블로그 운영</h3>
+            <p>Claude Code/MCP 활용 워크플로우 최적화, 중견기업 대상 AI 개발 표준 컨설팅 연구</p>
+          </div>
+          <div class="timeline-item">
+            <span class="year">2022 ~ 2024</span>
+            <h3>레거시 시스템 현대화 프로젝트 리드</h3>
+            <p>모놀리스 → MSA 전환, Spring Boot 3.x 마이그레이션, API Gateway 도입</p>
+          </div>
+          <div class="timeline-item">
+            <span class="year">2020 ~ 2022</span>
+            <h3>엔터프라이즈 통합 플랫폼 개발</h3>
+            <p>ERP-그룹웨어 실시간 연동 미들웨어, 배치 API 시스템, RPA 자동화 구축</p>
+          </div>
+          <div class="timeline-item">
+            <span class="year">2018 ~ 2020</span>
+            <h3>웹 기반 비즈니스 솔루션 개발</h3>
+            <p>Spring Framework 기반 사내 솔루션 개발, DB 설계 및 성능 튜닝</p>
+          </div>
+        </div>
+      </div>
 
-    <h2>현재 관심사</h2>
-    
-    <p>AI 활용 개발 생산성 향상에 큰 관심을 가지고 있습니다. 특히 Claude Code를 활용한 개발 워크플로우 최적화와, 중견기업 대상 AI 기반 개발 표준 컨설팅에 대한 연구를 진행 중입니다.</p>
+      <!-- Tech Stack -->
+      <div class="about-section">
+        <h2>Tech Stack</h2>
+        <div class="skill-grid">
+          <div class="skill-card">
+            <h3>Backend</h3>
+            <ul>
+              <li>Spring Boot 3.x, Spring Security</li>
+              <li>Java 17+, Kotlin</li>
+              <li>JPA/Hibernate, MyBatis</li>
+              <li>PostgreSQL, MSSQL, Oracle</li>
+              <li>Redis, RabbitMQ</li>
+            </ul>
+          </div>
+          <div class="skill-card">
+            <h3>Frontend & Mobile</h3>
+            <ul>
+              <li>Flutter, Dart (Riverpod)</li>
+              <li>TypeScript, React</li>
+              <li>HTML5, CSS3, JavaScript</li>
+              <li>Webix UI Framework</li>
+            </ul>
+          </div>
+          <div class="skill-card">
+            <h3>DevOps & Infra</h3>
+            <ul>
+              <li>Docker, Kubernetes</li>
+              <li>GitHub Actions CI/CD</li>
+              <li>Prometheus, Grafana</li>
+              <li>Nginx, Tomcat</li>
+            </ul>
+          </div>
+          <div class="skill-card">
+            <h3>AI & Tools</h3>
+            <ul>
+              <li>Claude Code, MCP</li>
+              <li>LangChain, RAG</li>
+              <li>Spring AI</li>
+              <li>Cursor, GitHub Copilot</li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
-    <p>또한 Flutter + Supabase 기반의 캐주얼 게임 대량 생산 시스템(BitRoom Factory)을 개인 프로젝트로 진행하고 있으며, 이를 통해 모바일 앱 개발과 수익화에 대한 실험을 하고 있습니다.</p>
+      <!-- Side Projects -->
+      <div class="about-section">
+        <h2>Side Projects</h2>
+        <div class="project-list">
+          <div class="project-item">
+            <h3>DevLog - 기술 블로그</h3>
+            <p>실무 경험 기반의 기술 아티클 30+개 작성. Spring Boot, AI, DevOps, Architecture 등 다양한 주제를 다루고 있습니다.</p>
+            <div class="tech">
+              <span>HTML</span><span>CSS</span><span>JavaScript</span><span>GitHub Pages</span>
+            </div>
+          </div>
+          <div class="project-item">
+            <h3>Toolry - 개발자 도구 모음</h3>
+            <p>JSON Formatter, Base64 인코더, UUID 생성기 등 개발자가 자주 사용하는 유틸리티를 모아둔 웹 도구입니다.</p>
+            <div class="tech">
+              <span>JavaScript</span><span>Web API</span><span>PWA</span>
+            </div>
+          </div>
+          <div class="project-item">
+            <h3>BitRoom Factory - 캐주얼 게임 플랫폼</h3>
+            <p>Flutter + Supabase 기반의 캐주얼 게임 대량 생산 시스템. 모바일 앱 개발과 수익화 실험을 진행 중입니다.</p>
+            <div class="tech">
+              <span>Flutter</span><span>Dart</span><span>Supabase</span><span>AdMob</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <h2>블로그 운영 목적</h2>
-    
-    <p>이 블로그는 실무에서 겪은 문제 해결 과정과 배운 점들을 기록하고 공유하기 위해 만들었습니다. 이론보다는 실전 경험 위주의 콘텐츠를 제공하고자 합니다.</p>
+      <!-- Blog Values -->
+      <div class="about-section">
+        <h2>이 블로그의 가치</h2>
+        <div class="values-list">
+          <div class="value-item">
+            <h3>실전 경험 기반</h3>
+            <p>이론이 아닌, 실무에서 직접 부딪히며 해결한 문제와 교훈을 공유합니다.</p>
+          </div>
+          <div class="value-item">
+            <h3>의사결정의 맥락</h3>
+            <p>"왜 이 기술을 선택했는가"에 대한 배경과 트레이드오프를 솔직하게 기록합니다.</p>
+          </div>
+          <div class="value-item">
+            <h3>코드와 다이어그램</h3>
+            <p>글만으로는 부족합니다. 실제 동작하는 코드와 시각적 다이어그램으로 이해를 돕습니다.</p>
+          </div>
+          <div class="value-item">
+            <h3>지속적 업데이트</h3>
+            <p>기술은 빠르게 변합니다. 최신 트렌드를 반영하여 콘텐츠를 꾸준히 업데이트합니다.</p>
+          </div>
+        </div>
+      </div>
 
-    <p>주로 다루는 주제:</p>
-    <ul>
-      <li>Spring Boot 기반 엔터프라이즈 개발</li>
-      <li>시스템 아키텍처 설계 및 마이그레이션</li>
-      <li>AI 활용 개발 생산성 향상</li>
-      <li>Flutter 모바일 앱 개발</li>
-      <li>DevOps 및 모니터링</li>
-    </ul>
+      <!-- Contact CTA -->
+      <div class="about-section" style="text-align: center; padding: 2rem 0;">
+        <p style="color: #aaa; margin-bottom: 1rem;">협업, 기술 질문, 또는 커피챗 제안은 언제든 환영합니다.</p>
+        <a href="contact.html" style="display: inline-block; background: #00d4aa; color: #0a0a1a; padding: 0.8rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600;">Contact Me</a>
+      </div>
 
-    <div class="ad-container">
-      <!-- 광고 영역 -->
     </div>
   </main>
 
-  <!-- Footer -->
   <footer>
     <div class="container">
       <div class="footer-content">
@@ -106,7 +383,12 @@
           <a href="terms.html">이용약관</a>
           <a href="contact.html">연락처</a>
         </div>
-        <p class="copyright">© 2025 Jaeseong의 개발 블로그. All rights reserved.</p>
+        <div class="footer-links" style="margin-top: 0.5rem;">
+          <a href="https://jaeseong90.github.io/jaeseong90Folio" target="_blank">포트폴리오</a>
+          <a href="https://jaeseong90.github.io/homepage-game" target="_blank">게임</a>
+          <a href="https://jaeseong90.github.io/Toolry" target="_blank">Toolry</a>
+        </div>
+        <p class="copyright">&copy; 2025 Jaeseong의 개발 블로그. All rights reserved.</p>
       </div>
     </div>
   </footer>
