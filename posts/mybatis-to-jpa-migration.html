@@ -248,7 +248,7 @@ public void batchInsert(List&lt;Item&gt; items) {
     </ol>
 
     <div class="info-box">
-      <strong>실무 경험 공유:</strong> 저는 실제로 300개가 넘는 MyBatis XML 매퍼를 JPA로 전환하는 프로젝트를 진행했습니다. 가장 힘들었던 부분은 단연 동적 쿼리 변환이었습니다. MyBatis의 &lt;if&gt;, &lt;choose&gt;, &lt;foreach&gt; 태그로 작성된 복잡한 동적 쿼리를 JPA의 Criteria API로 변환하려니 코드가 오히려 더 복잡해졌습니다. 결국 QueryDSL을 도입해서 해결했는데, QueryDSL의 타입 안전한 쿼리 빌더 덕분에 컴파일 시점에 오류를 잡을 수 있어서 오히려 생산성이 올라갔습니다. 다만 솔직히 말하면, 전체 쿼리의 약 10%는 너무 복잡하거나 DB 특화 기능을 사용해서 결국 Native Query로 남겨둘 수밖에 없었습니다. "100% JPA 전환"이라는 이상은 현실에서는 달성하기 어렵더라고요.
+      <strong>실무 경험 공유:</strong> 50개가 넘는 MyBatis XML 매퍼를 JPA로 전환하는 작업을 4개월에 걸쳐 진행한 적이 있습니다. 가장 힘들었던 부분은 동적 쿼리 변환이었고, 결국 QueryDSL을 도입해서 해결했습니다. 다만 솔직히 전체 쿼리의 일부는 너무 복잡해서 Native Query로 남겨둘 수밖에 없었습니다. "100% JPA 전환"이라는 이상은 현실에서는 달성하기 어렵더라고요.
     </div>
 
     <h2>마이그레이션 완료 후 1년, 솔직한 회고</h2>

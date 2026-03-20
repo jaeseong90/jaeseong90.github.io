@@ -232,7 +232,7 @@ docker stop "myapp-$CURRENT_COLOR" &amp;&amp; docker rm "myapp-$CURRENT_COLOR"
 echo "Deployment complete!"</code></pre>
 
     <div class="info-box">
-      <strong>새벽 3시의 교훈:</strong> 첫 프로덕션 Docker 배포 때 잊을 수 없는 경험이 있습니다. 컨테이너 메모리를 2GB로 제한했는데, JVM 힙 사이즈를 별도로 지정하지 않아서 JVM이 호스트 전체 메모리(16GB)를 기준으로 힙을 잡아버렸습니다. 배포 후 30분쯤 지나니 OOM(Out of Memory)이 발생하면서 컨테이너가 죽기 시작했고, 새벽 3시에 긴급 롤백을 해야 했습니다. PagerDuty 알림에 잠이 확 깨던 그 순간을 아직도 생생히 기억합니다. 이 사건 이후 <code>-XX:MaxRAMPercentage=75</code> 설정을 팀 표준 Dockerfile 템플릿에 포함시켰고, 신규 프로젝트는 반드시 이 템플릿에서 시작하도록 했습니다. 결국 한 번의 장애가 팀 전체의 배포 품질을 끌어올린 셈입니다.
+      <strong>실무 경험 공유:</strong> 회사 개발서버에 Docker를 처음 도입했을 때, 컨테이너 메모리 제한을 걸어놨는데 JVM 힙 사이즈를 별도로 지정하지 않아서 OOM(Out of Memory)이 발생한 적이 있습니다. 이후 <code>-XX:MaxRAMPercentage=75</code> 설정의 중요성을 깨달았고, 이 경험이 Docker 환경에서의 JVM 설정을 공부하는 계기가 되었습니다.
     </div>
 
     <h2>실무에서 겪은 트러블슈팅</h2>

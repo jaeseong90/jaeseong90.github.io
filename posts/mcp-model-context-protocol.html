@@ -518,7 +518,7 @@ starlette_app = Starlette(
 # uvicorn으로 실행: uvicorn server:starlette_app --port 8000</code></pre>
 
     <div class="info-box">
-      <strong>실무 경험 공유:</strong> 저는 Claude Desktop에 사내 DB 조회용 MCP 서버를 연결해서 사용하고 있습니다. 처음 도입을 제안했을 때 보안팀에서 SQL injection 위험을 이유로 강하게 반대했습니다. 설득하는 데만 2주가 걸렸는데, 결국 read-only 전용 DB 계정을 만들고, 허용된 쿼리 패턴만 실행할 수 있는 화이트리스트 방식을 적용해서 승인을 받았습니다. 지금은 팀 전체가 "Claude한테 물어봐"가 입버릇이 될 정도로 잘 활용하고 있고, 단순 데이터 조회 요청이 주 평균 40건에서 5건으로 줄었습니다.
+      <strong>실무 경험 공유:</strong> 개인적으로 Claude Desktop에 MCP를 연결해보면서 가능성을 느낀 경험이 있습니다. 파일 시스템이나 간단한 DB 조회용 MCP 서버를 로컬에서 띄워보았는데, AI가 외부 도구와 자연스럽게 연동되는 것을 보고 앞으로의 활용 가능성에 기대가 컸습니다. 아직 업무에 본격적으로 적용하지는 못했지만, 계속 공부하고 있습니다.
     </div>
 
     <h2>MCP를 도입하면서 겪은 시행착오</h2>
