@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="사이드 프로젝트를 월 100만 사용자 서비스로 성장시킨 실제 경험기. 무료 인프라 조합, 스케일링 전략, 비용 최적화까지.">
+  <meta name="keywords" content="사이드 프로젝트, 서비스 런칭, 무료 인프라, Vercel, Supabase, 스케일링">
+  <meta name="google-adsense-account" content="ca-pub-6529673634044767">
+
+  <meta property="og:title" content="사이드 프로젝트를 실서비스로: 0원으로 시작해서 월 100만 사용자 받기까지">
+  <meta property="og:description" content="무료 인프라로 시작한 사이드 프로젝트가 월 100만 사용자 서비스가 되기까지의 여정">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jaeseong90.github.io/posts/side-project-to-production.html">
+  <link rel="canonical" href="https://jaeseong90.github.io/posts/side-project-to-production.html">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+  <title>사이드 프로젝트를 실서비스로: 0원으로 시작해서 월 100만 사용자 받기까지 | Jaeseong의 개발 블로그</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6529673634044767" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="../index.html" class="logo">
+        <span>&lt;/&gt;</span> DevLog
+      </a>
+      <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
+      <nav id="nav">
+        <a href="../index.html">홈</a>
+        <a href="../about.html">소개</a>
+        <a href="../contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="post-header">
+    <div class="container">
+      <span class="post-tag">Experience</span>
+      <h1>사이드 프로젝트를 실서비스로: 0원으로 시작해서 월 100만 사용자 받기까지</h1>
+      <div class="post-meta">
+        <span>2026.03.20</span>
+        <span>16분 읽기</span>
+        <span>Jaeseong</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="ad-container"></div>
+
+    <article class="post-content">
+      <h2>발단: 퇴근 후 만든 개발자 도구</h2>
+      <p>2024년 9월, 회사에서 반복적으로 JSON 데이터를 변환하는 작업이 짜증 나서 만든 웹 도구가 있었다. JSON을 TypeScript 타입으로, CSV로, YAML로 변환해주는 단순한 유틸리티 사이트였다. 주말 이틀 만에 뚝딱 만들어서 Vercel 무료 플랜에 올렸다.</p>
+      <p>"나만 쓰려고" 만든 건데, 사내 슬랙에 공유했더니 동료들이 좋아했고, 그중 한 명이 개발자 커뮤니티에 올렸다. 그로부터 2주 뒤, 하루 방문자가 5,000명을 넘기기 시작했다.</p>
+      <p>처음엔 당황했다. "이게 왜 이렇게 많이 오지?" 싶었는데, 알고 보니 기존에 비슷한 도구들이 다 광고 떡칠이거나 UI가 구려서, 깔끔하게 만든 내 사이트로 사람들이 몰린 거였다. 그렇게 의도치 않게 사이드 프로젝트가 시작됐다.</p>
+
+      <h2>초기 기술 스택: 0원의 마법</h2>
+      <p>사이드 프로젝트의 최대 장점은 돈이 안 든다는 거다. 적어도 처음에는. 내가 처음에 사용한 무료 스택은 이랬다:</p>
+      <table>
+        <thead>
+          <tr><th>서비스</th><th>역할</th><th>무료 티어 한도</th><th>실제 사용량 (초기)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Vercel</td><td>프론트엔드 호스팅, Edge Functions</td><td>100GB 대역폭/월</td><td>~8GB/월</td></tr>
+          <tr><td>Supabase</td><td>DB + 인증</td><td>500MB DB, 50K 인증 요청/월</td><td>~50MB, ~3K 요청</td></tr>
+          <tr><td>Cloudflare</td><td>DNS + CDN</td><td>무제한</td><td>-</td></tr>
+          <tr><td>GitHub</td><td>코드 저장소 + CI/CD</td><td>2,000분/월 (Actions)</td><td>~200분</td></tr>
+          <tr><td>Upstash</td><td>Redis (레이트 리밋용)</td><td>10K 요청/일</td><td>~2K/일</td></tr>
+        </tbody>
+      </table>
+      <p>총 비용: <strong>정확히 0원</strong>. 도메인도 처음엔 Vercel에서 제공하는 .vercel.app 서브도메인을 쓰다가, 사용자가 1만 명 넘어가면서 .dev 도메인을 연 12달러에 구입했다. 그게 첫 지출이었다.</p>
+
+      <!-- SVG 1: 인프라 아키텍처 변화 -->
+      <h2>인프라 아키텍처 변천사</h2>
+      <svg viewBox="0 0 880 450" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:880px;margin:2rem auto;display:block;font-family:'Fira Code',monospace;">
+        <!-- 초기 -->
+        <text x="130" y="25" text-anchor="middle" font-size="13" font-weight="bold" fill="#3498db">초기 (0~5만 MAU)</text>
+        <text x="130" y="42" text-anchor="middle" font-size="10" fill="#aaa">비용: 0원/월</text>
+        <rect x="30" y="55" width="200" height="340" rx="10" fill="#1a1a2e" stroke="#3498db" stroke-width="1.5"/>
+        <rect x="55" y="75" width="150" height="40" rx="6" fill="#2d2d2d" stroke="#3498db" stroke-width="1"/>
+        <text x="130" y="100" text-anchor="middle" font-size="10" fill="#3498db">Vercel (Next.js)</text>
+        <line x1="130" y1="115" x2="130" y2="135" stroke="#555" stroke-width="1"/>
+        <rect x="55" y="140" width="150" height="40" rx="6" fill="#2d2d2d" stroke="#2ecc71" stroke-width="1"/>
+        <text x="130" y="165" text-anchor="middle" font-size="10" fill="#2ecc71">Supabase (DB)</text>
+        <line x1="130" y1="180" x2="130" y2="200" stroke="#555" stroke-width="1"/>
+        <rect x="55" y="205" width="150" height="40" rx="6" fill="#2d2d2d" stroke="#f39c12" stroke-width="1"/>
+        <text x="130" y="230" text-anchor="middle" font-size="10" fill="#f39c12">Cloudflare (CDN)</text>
+        <line x1="130" y1="245" x2="130" y2="265" stroke="#555" stroke-width="1"/>
+        <rect x="55" y="270" width="150" height="40" rx="6" fill="#2d2d2d" stroke="#e74c3c" stroke-width="1"/>
+        <text x="130" y="295" text-anchor="middle" font-size="10" fill="#e74c3c">Upstash (Redis)</text>
+        <text x="130" y="340" text-anchor="middle" font-size="9" fill="#2ecc71">심플하고 완벽!</text>
+        <text x="130" y="360" text-anchor="middle" font-size="9" fill="#aaa">배포: git push만 하면 끝</text>
+
+        <!-- Arrow -->
+        <text x="290" y="220" text-anchor="middle" font-size="24" fill="#f39c12">→</text>
+
+        <!-- 성장기 -->
+        <text x="470" y="25" text-anchor="middle" font-size="13" font-weight="bold" fill="#f39c12">성장기 (5~30만 MAU)</text>
+        <text x="470" y="42" text-anchor="middle" font-size="10" fill="#aaa">비용: ~15만원/월</text>
+        <rect x="340" y="55" width="260" height="340" rx="10" fill="#1a1a2e" stroke="#f39c12" stroke-width="1.5"/>
+        <rect x="360" y="75" width="100" height="35" rx="6" fill="#2d2d2d" stroke="#3498db" stroke-width="1"/>
+        <text x="410" y="97" text-anchor="middle" font-size="9" fill="#3498db">Vercel Pro</text>
+        <rect x="480" y="75" width="100" height="35" rx="6" fill="#2d2d2d" stroke="#9b59b6" stroke-width="1"/>
+        <text x="530" y="97" text-anchor="middle" font-size="9" fill="#9b59b6">Cloudflare R2</text>
+        <rect x="360" y="125" width="220" height="35" rx="6" fill="#2d2d2d" stroke="#2ecc71" stroke-width="1"/>
+        <text x="470" y="147" text-anchor="middle" font-size="9" fill="#2ecc71">Supabase Pro (DB + Auth)</text>
+        <rect x="360" y="175" width="100" height="35" rx="6" fill="#2d2d2d" stroke="#e74c3c" stroke-width="1"/>
+        <text x="410" y="197" text-anchor="middle" font-size="9" fill="#e74c3c">Upstash Pro</text>
+        <rect x="480" y="175" width="100" height="35" rx="6" fill="#2d2d2d" stroke="#f39c12" stroke-width="1"/>
+        <text x="530" y="197" text-anchor="middle" font-size="9" fill="#f39c12">Resend (이메일)</text>
+        <rect x="360" y="225" width="220" height="35" rx="6" fill="#2d2d2d" stroke="#3498db" stroke-width="1"/>
+        <text x="470" y="247" text-anchor="middle" font-size="9" fill="#3498db">Cloudflare (CDN + WAF)</text>
+        <rect x="360" y="275" width="220" height="35" rx="6" fill="#2d2d2d" stroke="#e67e22" stroke-width="1"/>
+        <text x="470" y="297" text-anchor="middle" font-size="9" fill="#e67e22">Sentry (에러 트래킹)</text>
+        <text x="470" y="340" text-anchor="middle" font-size="9" fill="#f39c12">무료→유료 전환 시작</text>
+        <text x="470" y="360" text-anchor="middle" font-size="9" fill="#aaa">정적 자산 R2로 분리</text>
+
+        <!-- Arrow -->
+        <text x="640" y="220" text-anchor="middle" font-size="24" fill="#2ecc71">→</text>
+
+        <!-- 안정기 -->
+        <text x="780" y="25" text-anchor="middle" font-size="13" font-weight="bold" fill="#2ecc71">안정기 (100만+ MAU)</text>
+        <text x="780" y="42" text-anchor="middle" font-size="10" fill="#aaa">비용: ~45만원/월</text>
+        <rect x="665" y="55" width="210" height="340" rx="10" fill="#1a1a2e" stroke="#2ecc71" stroke-width="1.5"/>
+        <rect x="685" y="75" width="170" height="30" rx="6" fill="#2d2d2d" stroke="#3498db" stroke-width="1"/>
+        <text x="770" y="95" text-anchor="middle" font-size="9" fill="#3498db">Vercel Pro + Edge</text>
+        <rect x="685" y="115" width="170" height="30" rx="6" fill="#2d2d2d" stroke="#2ecc71" stroke-width="1"/>
+        <text x="770" y="135" text-anchor="middle" font-size="9" fill="#2ecc71">Supabase Pro (리플리카)</text>
+        <rect x="685" y="155" width="170" height="30" rx="6" fill="#2d2d2d" stroke="#f39c12" stroke-width="1"/>
+        <text x="770" y="175" text-anchor="middle" font-size="9" fill="#f39c12">Cloudflare (CDN+R2+WAF)</text>
+        <rect x="685" y="195" width="170" height="30" rx="6" fill="#2d2d2d" stroke="#e74c3c" stroke-width="1"/>
+        <text x="770" y="215" text-anchor="middle" font-size="9" fill="#e74c3c">Upstash (Redis+Kafka)</text>
+        <rect x="685" y="235" width="80" height="30" rx="6" fill="#2d2d2d" stroke="#9b59b6" stroke-width="1"/>
+        <text x="725" y="255" text-anchor="middle" font-size="8" fill="#9b59b6">Sentry</text>
+        <rect x="775" y="235" width="80" height="30" rx="6" fill="#2d2d2d" stroke="#e67e22" stroke-width="1"/>
+        <text x="815" y="255" text-anchor="middle" font-size="8" fill="#e67e22">Posthog</text>
+        <rect x="685" y="275" width="80" height="30" rx="6" fill="#2d2d2d" stroke="#3498db" stroke-width="1"/>
+        <text x="725" y="295" text-anchor="middle" font-size="8" fill="#3498db">Resend</text>
+        <rect x="775" y="275" width="80" height="30" rx="6" fill="#2d2d2d" stroke="#2ecc71" stroke-width="1"/>
+        <text x="815" y="295" text-anchor="middle" font-size="8" fill="#2ecc71">BetterStack</text>
+        <text x="770" y="340" text-anchor="middle" font-size="9" fill="#2ecc71">안정적 운영!</text>
+        <text x="770" y="360" text-anchor="middle" font-size="9" fill="#aaa">99.95% 가용성 달성</text>
+      </svg>
+
+      <h2>MVP에서 제품으로: 기능 추가 과정</h2>
+      <p>처음엔 JSON-to-TypeScript 변환 하나뿐이었는데, 사용자 피드백을 받으면서 기능이 늘어났다:</p>
+      <ul>
+        <li><strong>2024년 10월</strong>: JSON ↔ YAML, JSON ↔ CSV 변환 추가 (사용자 요청 1위)</li>
+        <li><strong>2024년 11월</strong>: JSON 포맷터/미니파이어, Base64 인코더 추가</li>
+        <li><strong>2024년 12월</strong>: 사용자 계정 도입 (Supabase Auth), 변환 이력 저장</li>
+        <li><strong>2025년 1월</strong>: API 제공 시작 (개발자들이 자동화에 쓰고 싶다고 요청)</li>
+        <li><strong>2025년 3월</strong>: 정규식 테스터, UUID 생성기, 해시 계산기 등 유틸리티 모음으로 확장</li>
+        <li><strong>2025년 6월</strong>: CLI 도구 배포 (npm 패키지)</li>
+      </ul>
+      <p>기능을 추가할 때마다 지켰던 원칙이 하나 있다: <strong>"3일 안에 못 만들면 안 만든다."</strong> 사이드 프로젝트는 퇴근 후와 주말에 하는 거라, 스코프를 극도로 작게 잡아야 지속할 수 있다. 한 번은 "VS Code 확장까지 만들까?" 생각했다가, 일주일은 걸릴 것 같아서 포기했다. 대신 CLI 도구를 3일 만에 만들어서 npm에 올렸고, 이게 오히려 더 인기가 좋았다.</p>
+
+      <h2>사용자 0명에서 100만까지</h2>
+      <p>마케팅에 돈을 한 푼도 안 썼다. 진짜다. 모든 사용자 유입은 유기적이었다:</p>
+
+      <!-- SVG 2: 월별 사용자 증가 그래프 -->
+      <svg viewBox="0 0 800 350" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;margin:2rem auto;display:block;font-family:'Fira Code',monospace;">
+        <text x="400" y="25" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">월간 활성 사용자(MAU) 성장 추이</text>
+        <rect x="60" y="40" width="700" height="280" rx="8" fill="#1a1a2e"/>
+
+        <!-- Y axis -->
+        <text x="55" y="70" text-anchor="end" font-size="8" fill="#888">100만</text>
+        <line x1="60" y1="67" x2="760" y2="67" stroke="#333" stroke-width="0.5"/>
+        <text x="55" y="120" text-anchor="end" font-size="8" fill="#888">75만</text>
+        <line x1="60" y1="117" x2="760" y2="117" stroke="#333" stroke-width="0.5"/>
+        <text x="55" y="170" text-anchor="end" font-size="8" fill="#888">50만</text>
+        <line x1="60" y1="167" x2="760" y2="167" stroke="#333" stroke-width="0.5"/>
+        <text x="55" y="220" text-anchor="end" font-size="8" fill="#888">25만</text>
+        <line x1="60" y1="217" x2="760" y2="217" stroke="#333" stroke-width="0.5"/>
+        <text x="55" y="270" text-anchor="end" font-size="8" fill="#888">0</text>
+        <line x1="60" y1="267" x2="760" y2="267" stroke="#555" stroke-width="1"/>
+
+        <!-- X axis labels -->
+        <text x="100" y="290" text-anchor="middle" font-size="7" fill="#888">24.9</text>
+        <text x="155" y="290" text-anchor="middle" font-size="7" fill="#888">24.10</text>
+        <text x="210" y="290" text-anchor="middle" font-size="7" fill="#888">24.11</text>
+        <text x="265" y="290" text-anchor="middle" font-size="7" fill="#888">24.12</text>
+        <text x="320" y="290" text-anchor="middle" font-size="7" fill="#888">25.1</text>
+        <text x="375" y="290" text-anchor="middle" font-size="7" fill="#888">25.3</text>
+        <text x="430" y="290" text-anchor="middle" font-size="7" fill="#888">25.5</text>
+        <text x="485" y="290" text-anchor="middle" font-size="7" fill="#888">25.7</text>
+        <text x="540" y="290" text-anchor="middle" font-size="7" fill="#888">25.9</text>
+        <text x="595" y="290" text-anchor="middle" font-size="7" fill="#888">25.11</text>
+        <text x="650" y="290" text-anchor="middle" font-size="7" fill="#888">26.1</text>
+        <text x="720" y="290" text-anchor="middle" font-size="7" fill="#888">26.3</text>
+
+        <!-- Growth curve -->
+        <polyline points="100,264 155,258 210,250 265,240 320,228 375,210 430,185 485,160 540,135 595,110 650,85 720,70" fill="none" stroke="#2ecc71" stroke-width="2.5"/>
+
+        <!-- Data points -->
+        <circle cx="100" cy="264" r="4" fill="#2ecc71"/>
+        <circle cx="155" cy="258" r="4" fill="#2ecc71"/>
+        <circle cx="210" cy="250" r="4" fill="#2ecc71"/>
+        <circle cx="265" cy="240" r="4" fill="#2ecc71"/>
+        <circle cx="320" cy="228" r="4" fill="#2ecc71"/>
+        <circle cx="375" cy="210" r="4" fill="#f39c12"/>
+        <circle cx="430" cy="185" r="4" fill="#f39c12"/>
+        <circle cx="485" cy="160" r="4" fill="#f39c12"/>
+        <circle cx="540" cy="135" r="4" fill="#e74c3c"/>
+        <circle cx="595" cy="110" r="4" fill="#e74c3c"/>
+        <circle cx="650" cy="85" r="4" fill="#3498db"/>
+        <circle cx="720" cy="70" r="4" fill="#3498db"/>
+
+        <!-- Labels -->
+        <text x="100" y="256" text-anchor="middle" font-size="7" fill="#2ecc71">1.5K</text>
+        <text x="210" y="242" text-anchor="middle" font-size="7" fill="#2ecc71">8K</text>
+        <text x="320" y="220" text-anchor="middle" font-size="7" fill="#2ecc71">20K</text>
+        <text x="430" y="177" text-anchor="middle" font-size="7" fill="#f39c12">42K</text>
+        <text x="540" y="127" text-anchor="middle" font-size="7" fill="#e74c3c">65K</text>
+
+        <!-- Key events -->
+        <line x1="155" y1="258" x2="155" y2="300" stroke="#f39c12" stroke-width="0.5" stroke-dasharray="3,2"/>
+        <text x="155" y="310" text-anchor="middle" font-size="7" fill="#f39c12">커뮤니티 입소문</text>
+        <line x1="375" y1="210" x2="375" y2="300" stroke="#f39c12" stroke-width="0.5" stroke-dasharray="3,2"/>
+        <text x="375" y="310" text-anchor="middle" font-size="7" fill="#f39c12">API 출시</text>
+        <line x1="540" y1="135" x2="540" y2="300" stroke="#e74c3c" stroke-width="0.5" stroke-dasharray="3,2"/>
+        <text x="540" y="310" text-anchor="middle" font-size="7" fill="#e74c3c">HN 프론트페이지!</text>
+
+        <text x="720" y="60" text-anchor="middle" font-size="9" fill="#3498db" font-weight="bold">100만+</text>
+      </svg>
+
+      <p>성장의 핵심 전환점들:</p>
+      <ol>
+        <li><strong>2024년 10월</strong>: 한국 개발자 커뮤니티(okky, GeekNews)에서 입소문. DAU 1,000 돌파.</li>
+        <li><strong>2025년 1월</strong>: API 출시 후 개발 블로그들에서 소개. 해외 사용자 유입 시작.</li>
+        <li><strong>2025년 9월</strong>: 영어 UI 추가 후 Hacker News 프론트페이지에 올라감. 하루 만에 DAU 80,000 폭발. 이때 서버가 터졌다.</li>
+        <li><strong>2025년 12월</strong>: Product Hunt 런칭. 데일리 3위 달성. 해외 사용자 비중이 60%로 역전.</li>
+      </ol>
+
+      <h2>새벽 3시의 비명: 첫 번째 대규모 장애</h2>
+      <p>2025년 9월 15일, Hacker News에 올라간 날이었다. 퇴근하고 넷플릭스 보다가 슬랙 알림이 미친 듯이 울렸다. Uptime 모니터링 봇이 "사이트 다운"을 외치고 있었다.</p>
+      <p>Vercel 대시보드를 열어보니 Edge Function 호출이 분당 50,000건을 넘기고 있었다. 무료 플랜 한도를 훌쩍 넘겼고, Supabase도 동시 연결 수 한도(기본 60개)에 걸려서 <code>connection pool exhausted</code> 에러를 뱉고 있었다.</p>
+      <p>그날 밤에 한 일:</p>
+      <ol>
+        <li>Vercel을 Pro 플랜으로 긴급 업그레이드 (월 $20)</li>
+        <li>Supabase에 connection pooler(PgBouncer) 활성화</li>
+        <li>무거운 변환 로직을 Cloudflare Workers로 이전 (Edge에서 실행)</li>
+        <li>정적 결과를 Cloudflare R2에 캐싱하는 로직 추가</li>
+        <li>레이트 리밋을 IP당 분당 30회에서 60회로 올림 (정상 사용자가 차단당하고 있어서)</li>
+      </ol>
+      <p>새벽 3시에 시작해서 6시에 끝났다. 다음 날 회사에서 졸면서 일했지만, 기분은 이상하게 좋았다. 내가 만든 서비스를 전 세계 사람들이 쓰고 있다는 사실이 짜릿했으니까.</p>
+
+      <h2>DB 병목: Supabase와의 사투</h2>
+      <p>사용자가 30만을 넘기면서 DB가 병목이 되기 시작했다. 특히 "변환 이력 저장" 기능 때문에 쓰기가 많아졌는데, Supabase 무료 티어의 성능 한계가 보이기 시작했다.</p>
+      <p>시도한 해결책들:</p>
+      <ul>
+        <li><strong>쿼리 최적화</strong>: 가장 느린 쿼리 Top 10을 EXPLAIN ANALYZE로 분석. 인덱스 3개 추가로 평균 쿼리 시간 340ms → 45ms로 개선.</li>
+        <li><strong>읽기 전용 리플리카</strong>: Supabase Pro에서 제공하는 Read Replica 활성화. 읽기 트래픽의 80%를 리플리카로 분산.</li>
+        <li><strong>캐싱 레이어</strong>: 자주 조회되는 데이터(인기 변환 템플릿)를 Upstash Redis에 캐싱. 캐시 히트율 92% 달성.</li>
+        <li><strong>이력 데이터 보관 정책</strong>: 90일 이상 된 변환 이력은 R2에 아카이빙하고 DB에서 삭제. DB 사이즈 8GB → 2.3GB로 줄임.</li>
+      </ul>
+
+      <!-- SVG 3: 비용 구조 다이어그램 -->
+      <h2>비용 구조: 현실적인 이야기</h2>
+      <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;margin:2rem auto;display:block;font-family:'Fira Code',monospace;">
+        <text x="400" y="25" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">월간 운영 비용 변화 (원)</text>
+        <rect x="50" y="40" width="710" height="330" rx="8" fill="#1a1a2e"/>
+
+        <!-- Cost bars for each period -->
+        <!-- Period 1: 0-5만 -->
+        <text x="140" y="350" text-anchor="middle" font-size="9" fill="#aaa">0~5만 MAU</text>
+        <rect x="90" y="280" width="100" height="50" rx="4" fill="#2ecc71" opacity="0.8"/>
+        <text x="140" y="310" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">0원</text>
+        <text x="140" y="275" text-anchor="middle" font-size="8" fill="#2ecc71">무료 티어만으로 충분!</text>
+
+        <!-- Period 2: 5-20만 -->
+        <text x="310" y="350" text-anchor="middle" font-size="9" fill="#aaa">5~20만 MAU</text>
+        <!-- Stack -->
+        <rect x="260" y="215" width="100" height="25" rx="3" fill="#3498db" opacity="0.8"/>
+        <text x="310" y="232" text-anchor="middle" font-size="7" fill="#fff">Vercel Pro: $20</text>
+        <rect x="260" y="243" width="100" height="25" rx="3" fill="#2ecc71" opacity="0.8"/>
+        <text x="310" y="260" text-anchor="middle" font-size="7" fill="#fff">Supabase Pro: $25</text>
+        <rect x="260" y="271" width="100" height="25" rx="3" fill="#e74c3c" opacity="0.8"/>
+        <text x="310" y="288" text-anchor="middle" font-size="7" fill="#fff">Upstash: $10</text>
+        <rect x="260" y="299" width="100" height="25" rx="3" fill="#f39c12" opacity="0.8"/>
+        <text x="310" y="316" text-anchor="middle" font-size="7" fill="#fff">도메인: $1</text>
+        <text x="310" y="207" text-anchor="middle" font-size="10" fill="#f39c12" font-weight="bold">~8만원</text>
+
+        <!-- Period 3: 20-50만 -->
+        <text x="480" y="350" text-anchor="middle" font-size="9" fill="#aaa">20~50만 MAU</text>
+        <rect x="430" y="145" width="100" height="25" rx="3" fill="#3498db" opacity="0.8"/>
+        <text x="480" y="162" text-anchor="middle" font-size="7" fill="#fff">Vercel: $20</text>
+        <rect x="430" y="173" width="100" height="25" rx="3" fill="#2ecc71" opacity="0.8"/>
+        <text x="480" y="190" text-anchor="middle" font-size="7" fill="#fff">Supabase: $25</text>
+        <rect x="430" y="201" width="100" height="25" rx="3" fill="#e74c3c" opacity="0.8"/>
+        <text x="480" y="218" text-anchor="middle" font-size="7" fill="#fff">Upstash: $30</text>
+        <rect x="430" y="229" width="100" height="25" rx="3" fill="#9b59b6" opacity="0.8"/>
+        <text x="480" y="246" text-anchor="middle" font-size="7" fill="#fff">Cloudflare R2: $5</text>
+        <rect x="430" y="257" width="100" height="25" rx="3" fill="#e67e22" opacity="0.8"/>
+        <text x="480" y="274" text-anchor="middle" font-size="7" fill="#fff">Sentry: $26</text>
+        <rect x="430" y="285" width="100" height="25" rx="3" fill="#f39c12" opacity="0.8"/>
+        <text x="480" y="302" text-anchor="middle" font-size="7" fill="#fff">기타: $10</text>
+        <text x="480" y="137" text-anchor="middle" font-size="10" fill="#f39c12" font-weight="bold">~15만원</text>
+
+        <!-- Period 4: 100만+ -->
+        <text x="650" y="350" text-anchor="middle" font-size="9" fill="#aaa">100만+ MAU</text>
+        <rect x="600" y="75" width="100" height="22" rx="3" fill="#3498db" opacity="0.8"/>
+        <text x="650" y="90" text-anchor="middle" font-size="7" fill="#fff">Vercel: $20</text>
+        <rect x="600" y="100" width="100" height="22" rx="3" fill="#2ecc71" opacity="0.8"/>
+        <text x="650" y="115" text-anchor="middle" font-size="7" fill="#fff">Supabase: $75</text>
+        <rect x="600" y="125" width="100" height="22" rx="3" fill="#e74c3c" opacity="0.8"/>
+        <text x="650" y="140" text-anchor="middle" font-size="7" fill="#fff">Upstash: $50</text>
+        <rect x="600" y="150" width="100" height="22" rx="3" fill="#9b59b6" opacity="0.8"/>
+        <text x="650" y="165" text-anchor="middle" font-size="7" fill="#fff">CF R2+Workers: $15</text>
+        <rect x="600" y="175" width="100" height="22" rx="3" fill="#e67e22" opacity="0.8"/>
+        <text x="650" y="190" text-anchor="middle" font-size="7" fill="#fff">Sentry: $26</text>
+        <rect x="600" y="200" width="100" height="22" rx="3" fill="#f39c12" opacity="0.8"/>
+        <text x="650" y="215" text-anchor="middle" font-size="7" fill="#fff">Posthog: $50</text>
+        <rect x="600" y="225" width="100" height="22" rx="3" fill="#1abc9c" opacity="0.8"/>
+        <text x="650" y="240" text-anchor="middle" font-size="7" fill="#fff">BetterStack: $25</text>
+        <rect x="600" y="250" width="100" height="22" rx="3" fill="#c0392b" opacity="0.8"/>
+        <text x="650" y="265" text-anchor="middle" font-size="7" fill="#fff">Resend: $20</text>
+        <rect x="600" y="275" width="100" height="22" rx="3" fill="#7f8c8d" opacity="0.8"/>
+        <text x="650" y="290" text-anchor="middle" font-size="7" fill="#fff">기타: $20</text>
+        <text x="650" y="67" text-anchor="middle" font-size="10" fill="#f39c12" font-weight="bold">~45만원</text>
+
+        <!-- Revenue line -->
+        <text x="400" y="380" text-anchor="middle" font-size="10" fill="#2ecc71" font-weight="bold">현재 월 수익 (Pro API + 후원): ~180만원 → 순이익 ~135만원</text>
+      </svg>
+
+      <h2>수익화: 무료 서비스로 돈 벌기</h2>
+      <p>처음 6개월은 수익이 0원이었다. 그냥 재미로 운영했다. 하지만 비용이 나가기 시작하면서 수익화를 고민했다.</p>
+      <p>시도한 수익화 방법과 결과:</p>
+      <table>
+        <thead>
+          <tr><th>방법</th><th>시도 시기</th><th>결과</th><th>현재 상태</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Google AdSense</td><td>2025.02</td><td>월 8만원 정도, UX 심각하게 저하</td><td>제거함</td></tr>
+          <tr><td>Pro API (유료 플랜)</td><td>2025.04</td><td>월 120만원. 핵심 수익원!</td><td>유지 (확대 중)</td></tr>
+          <tr><td>GitHub Sponsors</td><td>2025.05</td><td>월 25만원. 감사한 분들이 계신다</td><td>유지</td></tr>
+          <tr><td>Buy Me a Coffee</td><td>2025.06</td><td>월 8만원 정도</td><td>유지</td></tr>
+          <tr><td>기업 라이선스</td><td>2025.10</td><td>월 30만원 (2개 기업)</td><td>유지 (확대 중)</td></tr>
+        </tbody>
+      </table>
+      <p>광고는 넣자마자 사용자 불만이 폭주해서 2주 만에 뺐다. 개발자 도구에 광고는 독이다. 대신 API rate limit을 무료 30회/분, Pro 1,000회/분으로 나누는 프리미엄 모델이 잘 먹혔다. 의외로 기업 고객이 기꺼이 돈을 내준다. "직원들이 매일 쓰는 도구인데 월 $50이면 싸다"라는 반응이었다.</p>
+
+      <h2>CDN 최적화: 성능의 80%는 캐싱</h2>
+      <p>사이트가 빠른 이유의 80%는 Cloudflare 덕분이다. 내가 적용한 최적화들:</p>
+      <ul>
+        <li><strong>정적 자산 R2 호스팅</strong>: JS, CSS, 이미지를 모두 R2에 올리고 Cloudflare CDN으로 서빙. Vercel에서 직접 서빙하던 것보다 TTFB가 60% 개선됐다.</li>
+        <li><strong>Edge Caching</strong>: 변환 결과 중 자주 사용되는 패턴(예: 빈 JSON → TypeScript)은 Edge에 캐싱. 캐시 히트율 85%.</li>
+        <li><strong>Brotli 압축</strong>: Cloudflare에서 Brotli를 활성화하면 gzip 대비 번들 크기가 추가로 15~20% 줄어든다.</li>
+        <li><strong>이미지 최적화</strong>: 사실 개발자 도구라 이미지가 거의 없지만, 로고와 OG 이미지는 WebP로 변환하고 srcset으로 반응형 처리했다.</li>
+      </ul>
+      <p>결과적으로 Lighthouse 성능 점수 98점, 전 세계 어디서든 FCP(First Contentful Paint) 0.8초 이내를 달성했다.</p>
+
+      <h2>혼자서 운영하는 노하우</h2>
+      <p>100만 사용자 서비스를 혼자 운영한다니 미쳤다고 생각할 수 있는데, 핵심은 "자동화"와 "단순함"이다:</p>
+      <ul>
+        <li><strong>모니터링</strong>: BetterStack으로 업타임 모니터링, Sentry로 에러 추적, Posthog로 사용자 행동 분석. 문제가 생기면 슬랙으로 알림이 온다.</li>
+        <li><strong>배포</strong>: main 브랜치에 push하면 Vercel이 자동 배포. Preview 배포로 PR마다 테스트 가능.</li>
+        <li><strong>고객 지원</strong>: GitHub Issues로 관리. FAQ 페이지를 잘 만들어두면 반복 질문의 80%가 줄어든다.</li>
+        <li><strong>보안</strong>: Cloudflare WAF + 레이트 리밋 + Supabase RLS. 한 달에 한 번 의존성 업데이트(Dependabot).</li>
+      </ul>
+      <p>일주일에 이 서비스에 쓰는 시간은 평균 5시간 정도다. 대부분 새 기능 개발이고, 운영 자체는 거의 손이 안 간다.</p>
+
+      <h2>얻은 교훈 7가지</h2>
+      <ol>
+        <li><strong>완벽하지 않아도 출시하라.</strong> 첫 버전은 정말 조잡했다. 하지만 출시 안 했으면 아무 일도 안 일어났다.</li>
+        <li><strong>사용자 피드백은 금이다.</strong> 내가 "이거 좋겠지" 하고 만든 기능보다, 사용자가 직접 요청한 기능이 10배 더 인기 있었다.</li>
+        <li><strong>무료 티어를 최대한 활용하라.</strong> 2024년 현재 무료 인프라만으로 놀라울 정도로 많은 걸 할 수 있다. 돈부터 쓰지 마라.</li>
+        <li><strong>글로벌을 처음부터 고려하라.</strong> 영어 UI를 나중에 추가했더니 코드 전체를 i18n 리팩토링해야 했다. 처음부터 했으면 훨씬 쉬웠을 것.</li>
+        <li><strong>광고보다 프리미엄이 낫다.</strong> 개발자 대상 서비스에서 광고는 신뢰를 깎아먹는다. 가치에 대한 대가를 받는 게 더 건강한 비즈니스 모델이다.</li>
+        <li><strong>인프라는 단순하게.</strong> AWS나 GCP를 직접 관리할 수도 있었지만, 관리형 서비스를 쓴 덕에 혼자서도 운영할 수 있다.</li>
+        <li><strong>재미를 잃지 마라.</strong> 사이드 프로젝트의 핵심 동력은 재미다. 돈이 되기 시작하면 의무감이 생기는데, 그러면 번아웃이 온다. 나는 "이번 주에 하기 싫으면 안 해도 된다"는 규칙을 아직도 지키고 있다.</li>
+      </ol>
+
+      <h2>앞으로의 계획</h2>
+      <p>현재 고민하고 있는 것들:</p>
+      <ul>
+        <li>팀을 꾸릴까? 아직은 혼자가 좋다. 하지만 기업 고객이 늘면 지원 인력이 필요할 수도.</li>
+        <li>오픈소스화: 핵심 변환 엔진을 오픈소스로 공개하는 것을 고려 중. 커뮤니티 기여를 받으면 혼자서 못 만드는 것도 가능해진다.</li>
+        <li>VS Code / IntelliJ 확장: 사용자 요청 1위. 올해 안에 만들 예정.</li>
+        <li>오프라인 모드: PWA로 변환 기능을 오프라인에서도 쓸 수 있게. 보안에 민감한 기업 고객들의 요청.</li>
+      </ul>
+      <p>퇴근 후 주말에 만든 작은 도구가 여기까지 올 줄은 정말 몰랐다. 혹시 사이드 프로젝트를 고민하고 있다면, 일단 만들어서 세상에 내놓아 보라. 반응은 항상 예상 밖이다.</p>
+
+      <div class="post-nav">
+        <a href="../index.html">&larr; 목록으로</a>
+        <a href="developer-productivity-tools-2026.html">이전 글 &larr;</a>
+      </div>
+    </article>
+
+    <div class="ad-container"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="../about.html">소개</a>
+          <a href="../privacy.html">개인정보처리방침</a>
+          <a href="../terms.html">이용약관</a>
+          <a href="../contact.html">연락처</a>
+        </div>
+        <div class="footer-links" style="margin-top: 0.5rem;">
+          <a href="https://jaeseong90.github.io/jaeseong90Folio" target="_blank">포트폴리오</a>
+          <a href="https://jaeseong90.github.io/homepage-game" target="_blank">게임</a>
+          <a href="https://jaeseong90.github.io/Toolry" target="_blank">Toolry</a>
+        </div>
+        <p class="copyright">&copy; 2025 Jaeseong의 개발 블로그. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  <script src="../js/main.js"></script>
+</body>
+</html>
