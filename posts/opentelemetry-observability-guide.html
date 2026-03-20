@@ -56,7 +56,7 @@
     <div class="ad-container"></div>
 
     <article class="post-content">
-      <p>마이크로서비스 아키텍처가 보편화되면서 서비스 간 호출이 복잡해지고, 장애의 원인을 파악하기가 점점 어려워지고 있습니다. 기존의 단순한 로그 수집이나 메트릭 모니터링만으로는 분산 시스템의 동작을 이해하기 어렵습니다. OpenTelemetry는 Traces, Metrics, Logs 세 가지 신호를 통합하여 진정한 관측성(Observability)을 제공하는 오픈소스 프레임워크입니다. 이 글에서는 Spring Boot 기반 프로젝트에 OpenTelemetry를 적용하는 전 과정을 다룹니다.</p>
+      <p>로그 파일을 grep하면서 장애 원인을 찾던 시절이 있었다. 마이크로서비스가 12개인데, 요청 하나가 어디서 느려지는지 찾으려면 12개 서버의 로그를 다 뒤져야 했다. 그때 선배가 말했다. '야, 분산 추적이라는 게 있어.' OpenTelemetry를 도입한 뒤, 장애 원인 파악 시간이 2시간에서 5분으로 줄었다.</p>
 
       <h2>관측성(Observability)이란?</h2>
 

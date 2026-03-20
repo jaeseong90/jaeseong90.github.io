@@ -56,7 +56,7 @@
 
     <article class="post-content">
       <h2>왜 Kotlin Coroutines인가?</h2>
-      <p>Spring WebFlux의 리액티브 프로그래밍은 강력하지만, Mono와 Flux 체인의 학습 곡선이 높고 디버깅이 어렵다는 단점이 있습니다. Kotlin Coroutines는 비동기 코드를 동기 코드처럼 직관적으로 작성할 수 있어, 팀 전체의 생산성을 높이는 데 효과적이었습니다.</p>
+      <p>Java의 CompletableFuture를 쓰다가 Kotlin Coroutine을 처음 써본 날, 동료에게 이렇게 말했다. '이게 코드야? 사기 아니야?' 비동기 코드가 동기 코드처럼 읽히는 마법. 물론 현실은 마법만은 아니었다. CancellationException이 삼켜지는 함정에 빠져서 3일을 날린 적도 있다.</p>
       <p>실제로 저희 팀에서는 기존 Java + WebFlux 프로젝트를 Kotlin + Coroutines로 전환한 후 코드 가독성이 크게 향상되었고, 신규 멤버의 온보딩 시간도 줄어들었습니다.</p>
 
       <h2>프로젝트 설정</h2>
