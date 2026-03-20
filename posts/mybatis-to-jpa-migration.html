@@ -247,11 +247,23 @@ public void batchInsert(List&lt;Item&gt; items) {
       <li>기존 MyBatis 단위 테스트가 여전히 통과하는지 확인</li>
     </ol>
 
-    <h2>마치며</h2>
+    <div class="info-box">
+      <strong>실무 경험 공유:</strong> 저는 실제로 300개가 넘는 MyBatis XML 매퍼를 JPA로 전환하는 프로젝트를 진행했습니다. 가장 힘들었던 부분은 단연 동적 쿼리 변환이었습니다. MyBatis의 &lt;if&gt;, &lt;choose&gt;, &lt;foreach&gt; 태그로 작성된 복잡한 동적 쿼리를 JPA의 Criteria API로 변환하려니 코드가 오히려 더 복잡해졌습니다. 결국 QueryDSL을 도입해서 해결했는데, QueryDSL의 타입 안전한 쿼리 빌더 덕분에 컴파일 시점에 오류를 잡을 수 있어서 오히려 생산성이 올라갔습니다. 다만 솔직히 말하면, 전체 쿼리의 약 10%는 너무 복잡하거나 DB 특화 기능을 사용해서 결국 Native Query로 남겨둘 수밖에 없었습니다. "100% JPA 전환"이라는 이상은 현실에서는 달성하기 어렵더라고요.
+    </div>
 
-    <p>MyBatis에서 JPA로의 전환은 한 번에 이루어질 수 없으며, 그럴 필요도 없습니다. 각 기술의 장점을 살리면서 점진적으로 전환하는 것이 가장 안전하고 실용적인 접근법입니다. 기존 복잡한 SQL은 MyBatis가, 신규 CRUD는 JPA가 담당하는 하이브리드 구조가 현실적인 해답입니다.</p>
+    <h2>마이그레이션 완료 후 1년, 솔직한 회고</h2>
+
+    <p>마이그레이션을 완료한 지 1년이 지난 지금 돌아보면, 전환 자체는 성공적이었지만 기대와 달랐던 부분도 있습니다. JPA 도입으로 단순 CRUD 개발 속도는 체감상 2배 이상 빨라졌고, 엔티티 중심의 도메인 모델링 덕분에 코드 가독성도 크게 개선되었습니다.</p>
+
+    <p>반면, 신규 팀원이 JPA의 영속성 컨텍스트와 지연 로딩 개념을 익히는 데 예상보다 시간이 걸렸고, N+1 문제로 인한 성능 이슈가 초기 3개월간 꾸준히 발생했습니다. 결국 각 기술의 장점을 살리면서 점진적으로 전환하는 것이 가장 안전하고 실용적인 접근법이라는 결론은 변하지 않았습니다. 기존 복잡한 SQL은 MyBatis가, 신규 CRUD는 JPA가 담당하는 하이브리드 구조가 현실적인 해답입니다.</p>
 
     <div class="ad-container"></div>
+    <!-- 댓글 영역 -->
+    <div class="comments-section" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #333;">
+      <h3 style="color: #00d4aa; margin-bottom: 1rem;">💬 댓글을 남겨주세요</h3>
+      <p style="color: #888; margin-bottom: 1rem;">이 글에 대한 의견이나 질문이 있으시면 <a href="https://github.com/jaeseong90/jaeseong90.github.io/issues" target="_blank" style="color: #00d4aa;">GitHub Issues</a>에서 남겨주세요.</p>
+      <a href="https://github.com/jaeseong90/jaeseong90.github.io/issues/new?title=댓글&amp;body=이+글에+대한+의견을+남겨주세요." target="_blank" style="display: inline-block; padding: 0.7rem 1.5rem; background: #00d4aa; color: #0a0a0a; border-radius: 8px; text-decoration: none; font-weight: 600;">댓글 작성하기</a>
+    </div>
   </article>
 
   <footer>

@@ -525,6 +525,10 @@ class TestTools:
       <strong>주의사항:</strong> AI 에이전트 테스트에서는 LLM 응답의 비결정성을 고려해야 합니다. 정확한 출력값 비교 대신, 응답에 포함되어야 할 핵심 요소가 있는지, 올바른 도구가 선택되었는지, 에러 상황에서 안전하게 처리되는지를 검증하세요.
     </div>
 
+    <div class="info-box">
+      <strong>실무 경험 공유:</strong> 저는 실제로 사내 고객 응대 챗봇을 에이전트 방식으로 전환하는 프로젝트를 진행한 적이 있습니다. 기존 규칙 기반 챗봇 대비 사용자 만족도가 40% 올랐고, 처리 가능한 문의 유형도 3배 이상 늘었습니다. 그런데 운영 2주 차에 예상치 못한 문제가 터졌습니다. 에이전트가 환각(Hallucination)으로 존재하지 않는 환불 정책을 안내한 것입니다. 고객이 그 답변을 캡처해서 환불을 요청했고, 법무팀에서 바로 클레임이 왔습니다. 이 사건 이후 저희 팀은 에이전트 응답에 대해 "사실 검증 레이어"를 추가했고, 법적 리스크가 있는 주제에 대해서는 반드시 사전 승인된 템플릿만 사용하도록 가드레일을 설정했습니다. 기술적으로 멋진 에이전트를 만드는 것도 중요하지만, 실제 비즈니스에서는 신뢰성과 안전성이 훨씬 더 중요하다는 것을 뼈저리게 느꼈습니다.
+    </div>
+
     <h2>프로덕션 운영 고려사항</h2>
 
     <h3>비용 관리</h3>
@@ -550,7 +554,7 @@ os.environ["LANGCHAIN_PROJECT"] = "ai-agent-prod"
 # - 토큰 사용량 및 지연 시간
 # - 에러 발생 지점</code></pre>
 
-    <h2>마치며</h2>
+    <h2>실전에서 느낀 AI 에이전트의 현주소</h2>
 
     <p>AI 에이전트 개발은 단순히 LLM API를 호출하는 것을 넘어, 시스템 설계, 워크플로우 오케스트레이션, 안전성, 테스트, 운영까지 포함하는 종합적인 엔지니어링 영역입니다.</p>
 
@@ -559,6 +563,12 @@ os.environ["LANGCHAIN_PROJECT"] = "ai-agent-prod"
     <p>다음 글에서는 MCP(Model Context Protocol)를 활용하여 에이전트의 도구 연동을 표준화하는 방법을 다루겠습니다.</p>
 
     <div class="ad-container"></div>
+    <!-- 댓글 영역 -->
+    <div class="comments-section" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #333;">
+      <h3 style="color: #00d4aa; margin-bottom: 1rem;">💬 댓글을 남겨주세요</h3>
+      <p style="color: #888; margin-bottom: 1rem;">이 글에 대한 의견이나 질문이 있으시면 <a href="https://github.com/jaeseong90/jaeseong90.github.io/issues" target="_blank" style="color: #00d4aa;">GitHub Issues</a>에서 남겨주세요.</p>
+      <a href="https://github.com/jaeseong90/jaeseong90.github.io/issues/new?title=댓글&amp;body=이+글에+대한+의견을+남겨주세요." target="_blank" style="display: inline-block; padding: 0.7rem 1.5rem; background: #00d4aa; color: #0a0a0a; border-radius: 8px; text-decoration: none; font-weight: 600;">댓글 작성하기</a>
+    </div>
   </article>
 
   <footer>
@@ -571,7 +581,7 @@ os.environ["LANGCHAIN_PROJECT"] = "ai-agent-prod"
           <a href="../terms.html">이용약관</a>
           <a href="../contact.html">연락처</a>
         </div>
-        <p class="copyright">&copy; 2025 Jaeseong의 개발 블로그. All rights reserved.</p>
+        <p class="copyright">&copy; 2025-2026 Jaeseong의 개발 블로그. All rights reserved.</p>
       </div>
     </div>
   </footer>

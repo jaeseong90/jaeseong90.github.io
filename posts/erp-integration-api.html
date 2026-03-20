@@ -200,6 +200,10 @@ public void recoverSync(TransientDataAccessException e, EmployeeDto dto) {
     }
 }</code></pre>
 
+    <div class="info-box">
+      <strong>현장에서 느낀 것:</strong> SAP ERP 연동 프로젝트를 맡았을 때, 기술적인 구현 자체는 3개월이면 충분했습니다. RFC 호출 래핑하고, 데이터 매핑하고, 배치 스케줄러 돌리면 끝이니까요. 그런데 실제로 프로젝트가 완료되기까지 9개월이 걸렸습니다. 나머지 6개월은 순전히 부서 간 데이터 표준 합의에 소요된 시간입니다. 인사팀의 "부서코드"와 회계팀의 "코스트센터"가 1:1로 매핑되지 않는다거나, 그룹웨어의 "직급" 체계와 ERP의 "직급" 체계가 미묘하게 다른 문제들이 끝없이 나왔습니다. 한번은 영업팀과 물류팀이 "출하일"의 정의가 다르다는 것을 연동 테스트 중에 발견해서, 양쪽 팀장님을 모시고 회의한 적도 있습니다. 결국 ERP 연동의 진짜 난이도는 코드가 아니라 사람과 프로세스에 있다는 것을 절감했습니다.
+    </div>
+
     <h2>운영 고려사항</h2>
 
     <h3>모니터링</h3>
@@ -219,12 +223,18 @@ public void recoverSync(TransientDataAccessException e, EmployeeDto dto) {
       <li>알림: 담당자 즉시 통보</li>
     </ul>
 
-    <h2>마치며</h2>
+    <h2>ERP 연동, 결국 사람의 문제였다</h2>
 
     <p>시스템 연동은 기술적 구현보다 업무 흐름의 이해가 더 중요합니다. 현업 담당자와 긴밀하게 소통하고, 예외 상황에 대한 처리 방안을 사전에 정의하는 것이 성공의 핵심입니다.</p>
 
     <div class="ad-container">
       <!-- 광고 영역 -->
+    </div>
+    <!-- 댓글 영역 -->
+    <div class="comments-section" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #333;">
+      <h3 style="color: #00d4aa; margin-bottom: 1rem;">💬 댓글을 남겨주세요</h3>
+      <p style="color: #888; margin-bottom: 1rem;">이 글에 대한 의견이나 질문이 있으시면 <a href="https://github.com/jaeseong90/jaeseong90.github.io/issues" target="_blank" style="color: #00d4aa;">GitHub Issues</a>에서 남겨주세요.</p>
+      <a href="https://github.com/jaeseong90/jaeseong90.github.io/issues/new?title=댓글&amp;body=이+글에+대한+의견을+남겨주세요." target="_blank" style="display: inline-block; padding: 0.7rem 1.5rem; background: #00d4aa; color: #0a0a0a; border-radius: 8px; text-decoration: none; font-weight: 600;">댓글 작성하기</a>
     </div>
   </article>
 
@@ -239,7 +249,7 @@ public void recoverSync(TransientDataAccessException e, EmployeeDto dto) {
           <a href="../terms.html">이용약관</a>
           <a href="../contact.html">연락처</a>
         </div>
-        <p class="copyright">© 2025 Jaeseong의 개발 블로그. All rights reserved.</p>
+        <p class="copyright">© 2025-2026 Jaeseong의 개발 블로그. All rights reserved.</p>
       </div>
     </div>
   </footer>

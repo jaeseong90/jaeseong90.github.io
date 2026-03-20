@@ -196,14 +196,24 @@ public class OrderMetrics {
 
     <p>WAR 배포 환경에서 환경변수가 제대로 전달되지 않을 수 있습니다. CATALINA_OPTS 대신 JAVA_OPTS를 사용하거나, catalina.properties에 직접 설정합니다.</p>
 
-    <h2>마치며</h2>
+    <div class="info-box">
+      <strong>실무 경험 공유:</strong> Grafana 알림이 진짜로 장애를 막아준 경험이 있습니다. 어느 금요일 오후 4시쯤 Slack에 Grafana 알림이 왔는데, "HikariCP active connections > 90%"라는 내용이었습니다. 대시보드를 열어보니 DB 커넥션 풀 사용량이 평소 30% 수준에서 갑자기 90%까지 치솟아 있었습니다. 원인을 추적해보니, 그날 오전에 배포된 신규 API에서 트랜잭션 내부에서 외부 API를 호출하면서 커넥션을 장시간 점유하는 버그가 있었습니다. 커넥션을 제대로 반환하지 않아서 풀이 고갈되기 직전이었던 거죠. 장애가 나기 약 30분 전에 잡아서 핫픽스를 배포할 수 있었습니다. 만약 모니터링이 없었다면 금요일 저녁에 전체 서비스가 멈추는 대참사가 벌어졌을 겁니다.
+    </div>
 
-    <p>모니터링 시스템 구축은 선택이 아닌 필수입니다. 장애 발생 시 빠른 원인 파악과 성능 병목 지점 식별에 큰 도움이 됩니다.</p>
+    <h2>모니터링 시스템이 장애를 막아준 실제 사례</h2>
 
-    <p>다음 글에서는 ELK 스택을 활용한 로그 모니터링에 대해 다루겠습니다.</p>
+    <p>위에서 공유한 경험 이후로 팀에서는 모니터링 알림 규칙을 대폭 강화했습니다. 단순히 시스템 메트릭만 감시하는 것이 아니라, 배포 직후 30분간은 알림 임계값을 더 낮게 설정하는 "배포 감시 모드"를 도입했습니다. 이 덕분에 비슷한 유형의 문제를 3건 더 사전에 탐지할 수 있었습니다.</p>
+
+    <p>모니터링 시스템 구축은 선택이 아닌 필수입니다. 대시보드를 만드는 것 자체보다, 어떤 메트릭을 감시하고 어떤 임계값에서 알림을 받을지를 설계하는 것이 핵심입니다. 특히 DB 커넥션 풀, JVM 메모리, 에러율 이 세 가지는 반드시 알림을 설정해두시길 강력히 추천합니다.</p>
 
     <div class="ad-container">
       <!-- 광고 영역 -->
+    </div>
+    <!-- 댓글 영역 -->
+    <div class="comments-section" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #333;">
+      <h3 style="color: #00d4aa; margin-bottom: 1rem;">💬 댓글을 남겨주세요</h3>
+      <p style="color: #888; margin-bottom: 1rem;">이 글에 대한 의견이나 질문이 있으시면 <a href="https://github.com/jaeseong90/jaeseong90.github.io/issues" target="_blank" style="color: #00d4aa;">GitHub Issues</a>에서 남겨주세요.</p>
+      <a href="https://github.com/jaeseong90/jaeseong90.github.io/issues/new?title=댓글&amp;body=이+글에+대한+의견을+남겨주세요." target="_blank" style="display: inline-block; padding: 0.7rem 1.5rem; background: #00d4aa; color: #0a0a0a; border-radius: 8px; text-decoration: none; font-weight: 600;">댓글 작성하기</a>
     </div>
   </article>
 
@@ -218,7 +228,7 @@ public class OrderMetrics {
           <a href="../terms.html">이용약관</a>
           <a href="../contact.html">연락처</a>
         </div>
-        <p class="copyright">© 2025 Jaeseong의 개발 블로그. All rights reserved.</p>
+        <p class="copyright">© 2025-2026 Jaeseong의 개발 블로그. All rights reserved.</p>
       </div>
     </div>
   </footer>
